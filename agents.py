@@ -14,7 +14,7 @@ class AgentState(TypedDict):
     question : str
     email: Optional[str] = None
     loginStatus : Optional[str] = None
-    
+
 
 def chat_llm(question: str, model = 'gemma2'):
     
@@ -22,5 +22,34 @@ def chat_llm(question: str, model = 'gemma2'):
     result = llm.invoke(question)
 
     return result
+
+def questionIdentifierAgent(state: AgentState):
+    pass
+
+def emailAgent(state: AgentState):
+    pass
+
+def identityVerificatorAgent(state: AgentState):
+    pass
+
+def resetPasswordAgent(state: AgentState):
+    pass
+
+def incompleteAttributeAgent(state: AgentState):
+    pass
+
+def academicAgent(state: AgentState):
+    pass
+
+def studentAgent(state: AgentState):
+    pass
+
+def newsAgent(state: AgentState):
+    pass
+
+# Definisikan Langgraph
+workflow = StateGraph(AgentState)
+
+
 
 

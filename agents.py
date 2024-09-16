@@ -12,14 +12,15 @@ base_url = os.getenv('BASE_URL')
 class AgentState(TypedDict):
     context : str
     question : str
-    purpose : Optional[str] = None
     email: Optional[str] = None
+    loginStatus : Optional[str] = None
+    
 
 def chat_llm(question: str, model = 'gemma2'):
+    
     llm = Ollama(base_url=base_url, model=model, verbose=True)
     result = llm.invoke(question)
 
     return result
 
-result = chat_llm("Halo")
-print(result)
+

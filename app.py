@@ -27,6 +27,10 @@ def generate_response(user_input):
     return result
 
 
+prompt = f"""
+
+    """
+
 # Kotak input pengguna
 user_input = st.text_input("Masukkan pesan:")
 

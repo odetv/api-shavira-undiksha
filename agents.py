@@ -28,7 +28,7 @@ def chat_llm(question: str, model = 'gemma2'):
 
 
 def questionIdentifierAgent(state: AgentState):
-    prompt = f"""
+    prompt = """
         Kamu adalah analis pertanyaan pengguna. Tugas anda adalah mengklasifikasikan
         pertanyaan yang masuk.
 
@@ -36,13 +36,14 @@ def questionIdentifierAgent(state: AgentState):
         jadi tugas Anda sangat penting bagi tim kami.
 
         Ada empat kemungkinan pertanyaan yang diajukan 
-        - ACCOUNT - pertanyaan yang berkaitan dengan mengatur ulang password akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha
+        - ACCOUNT - pertanyaan yang berkaitan dengan mengatur ulang password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha
         - ACADEMIC - pertanyaan yang berkaitan dengan informasi akademik (mata kuliah, jadwal kuliah, pembayaran Uang Kuliah Tunggal, dosen, program studi)
         - STUDENT - pertanyaan berkaitan dengan informasi kemahasiswaan seperti organisasi kemahasiswaan, kegiatan kemahasiswaan, Unit Kegiatan Mahasiswa (UKM), Komunitas dan lain-lain
         - NEWS - pertanyaan yang berkaitan dengan berita-berita terkini di Universitas pendidikan Ganesha
-        - GENERAL - pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant) atau menanyakan hal umum terkait Undiksha
+        - GENERAL - pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant) dan
+          menanyakan hal umum terkait Undiksha
 
-        Hasilkan hanya satu kata (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL) berdasarkan pertanyaan yang diberikan.
+        Hasilkan hanya satu kata (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL) berdasarkan pertanyaan yang diberikan
     """
 
     messages = [
@@ -52,49 +53,59 @@ def questionIdentifierAgent(state: AgentState):
 
     response = chat_llm(messages)
 
-    print(response)
+    print("--- QUESTION IDENTIFIER AGENT ---")
 
     return {"question_type": response}
 
 
-def routeAgent(state: AgentState):
-    pass
+def routeToSpecificAgent(state: AgentState):
+    return state['question_type']
 
-def emailAgent(state: AgentState):
-    pass
-
-def identityVerificatorAgent(state: AgentState):
-    pass
-
-def resetPasswordAgent(state: AgentState):
-    pass
-
-def incompleteAttributeAgent(state: AgentState):
+def accountAgent(state: AgentState):
+    print("--- ACCOUNT AGENT ---")
     pass
 
 def academicAgent(state: AgentState):
+    print("--- ACADEMIC AGENT ---")
     pass
 
 def studentAgent(state: AgentState):
+    print("--- STUDENT AGENT ---")
     pass
 
 def newsAgent(state: AgentState):
+    print("--- NEWS AGENT ---")
+    pass
+
+def generalAgent(state: AgentState):
+    print("--- GENERAL AGENT ---")
     pass
 
 # Definisikan Langgraph
 workflow = StateGraph(AgentState)
 
 workflow.add_node('question_identifier', questionIdentifierAgent)
-# workflow.add_node('email', emailAgent)
-# workflow.add_node('identity_verificator', identityVerificatorAgent)
-# workflow.add_node('reset_password', resetPasswordAgent)
-# workflow.add_node('incomplete_attribute', incompleteAttributeAgent)
-# workflow.add_node('academic', academicAgent)
-# workflow.add_node('student', studentAgent)
-# workflow.add_node('news', newsAgent)
+workflow.add_node('account', accountAgent)
+workflow.add_node('academic', academicAgent)
+workflow.add_node('student', studentAgent)
+workflow.add_node('news', newsAgent)
+workflow.add_node('general', generalAgent)
 
 workflow.add_edge(START, 'question_identifier')
+workflow.add_conditional_edges(
+    'question_identifier',
+    routeToSpecificAgent, {
+        "ACCOUNT \n": 'account',
+        "ACADEMIC \n": 'academic',
+        "STUDENT \n": 'student',
+        "NEWS \n": 'news',
+        "GENERAL \n": 'general',
+    }
+)
 
 graph = workflow.compile()
 
-graph.invoke({'question': 'bagaimana cara mereset password'})
+
+question = 'bagaimana caranya mereset password'
+print(question)
+graph.invoke({'question': question})

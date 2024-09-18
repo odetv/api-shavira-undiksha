@@ -1,5 +1,6 @@
 from langgraph.graph import END, START, StateGraph
 from typing import TypedDict, Literal, Optional
+from langchain.memory import ConversationBufferMemory
 from langchain_community.llms import Ollama
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -17,7 +18,7 @@ class AgentState(TypedDict):
     email: Optional[str] = None
     loginStatus : Optional[str] = None
     accountType : Optional[str] = None
-
+    memory: ConversationBufferMemory
 
 def chat_llm(question: str, model = 'gemma2'):
     
@@ -58,12 +59,17 @@ def questionIdentifierAgent(state: AgentState):
     return {"question_type": response}
 
 
-def routeToSpecificAgent(state: AgentState):
+def routeToSpecificAgent(state: AgentState): 
     return state['question_type']
 
 def accountAgent(state: AgentState):
     print("--- ACCOUNT AGENT ---")
     pass
+
+def routeToSpecificEmailAgent(state: AgentState):
+    prompt = """
+        Kamu adalah penentu jenis email yang akan direset, tentukan apakah user ingin mereset password SSO Undiksha atau mereset password pada email google undiksha
+    """
 
 def academicAgent(state: AgentState):
     print("--- ACADEMIC AGENT ---")
@@ -84,6 +90,7 @@ def generalAgent(state: AgentState):
 # Definisikan Langgraph
 workflow = StateGraph(AgentState)
 
+# Definisikan Node
 workflow.add_node('question_identifier', questionIdentifierAgent)
 workflow.add_node('account', accountAgent)
 workflow.add_node('academic', academicAgent)
@@ -91,6 +98,7 @@ workflow.add_node('student', studentAgent)
 workflow.add_node('news', newsAgent)
 workflow.add_node('general', generalAgent)
 
+# Definisikan Edge
 workflow.add_edge(START, 'question_identifier')
 workflow.add_conditional_edges(
     'question_identifier',
@@ -103,6 +111,12 @@ workflow.add_conditional_edges(
     }
 )
 
+workflow.add_edge('academic', END)
+workflow.add_edge('student', END)
+workflow.add_edge('news', END)
+workflow.add_edge('general', END)
+
+# Compile Graph
 graph = workflow.compile()
 
 

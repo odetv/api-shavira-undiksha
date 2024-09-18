@@ -124,6 +124,6 @@ workflow.add_edge('general', END)
 graph = workflow.compile()
 
 
-question = 'saya ingin mereset password'
+question = 'saya ingin mereset password instagram'
 print(question)
 graph.invoke({'question': question})

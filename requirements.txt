@@ -1,0 +1,6 @@
+langgraph
+langchain-community
+langchain-core
+ollama
+python-dotenv
+typing-extensions

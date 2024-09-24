@@ -1,6 +1,6 @@
 # **SHAVIRA (GANESHA VIRTUAL ASSISTANT)**
 
-![Roundmap Langgrap Shavira](/img/SHAVIRA%20ROUNDMAP%20AGENT.png)
+![Roundmap Langgrap Shavira](/assets/images/SHAVIRA%20ROUNDMAP%20AGENT.png)
 
 # References:
 
@@ -8,4 +8,4 @@
 2. _Build a Reliable RAG Agent using LangGraph_: https://medium.com/the-ai-forum/build-a-reliable-rag-agent-using-langgraph-2694d55995cd
 
 \
-Developed By [DiarCode11](https://github.com/DiarCode11) & [Ode TV](https://github.com/odetv)
+Developed By [DiarCode11](https://github.com/DiarCode11) & [odetv](https://github.com/odetv)

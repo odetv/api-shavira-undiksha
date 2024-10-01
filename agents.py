@@ -63,10 +63,10 @@ def accountAgent(state: AgentState):
 
     prompt = f"""
         Pertanyaan : {state['question']}
-        Dari pertanyaan diatas hasilkan JSON tanpa docstring, awalan, atau akhiran apapun, karena JSON tersebut akan dikonversi ke list.
-        Berikut adalah key pada json tersebut:
-        - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka kembalikan string kosong (""),
-        - "EmailType": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user : 
+        Hasilkan dalam bentuk JSON tanpa pembungkus.
+        Berikut key pada JSON tersebut:
+        - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka null,
+        - "EmailType": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user, yaitu:
             - "GOOGLE EMAIL" (Ketika dari pernyataan user jelas menyebutkan "Akun Google", jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
             - "SSO EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
             - "HYBRID EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
@@ -221,5 +221,5 @@ workflow.add_edge('incompleteInformationAgent', END)
 graph = workflow.compile()
 
 
-question = 'saya ingin reset password dengan email google gelgel@undiksha.ac.id'
+question = 'saya ingin reset password dengan email google'
 graph.invoke({'question': question})

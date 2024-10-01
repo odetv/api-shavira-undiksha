@@ -5,11 +5,10 @@ from langchain_community.llms import Ollama
 from openai import OpenAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
-from llm import chat_llm, chat_openai
+from llm import chat_ollama, chat_openai
 import os
 import json
 
-# Memuat file .env
 load_dotenv()
 
 base_url = os.getenv('BASE_URL')
@@ -51,7 +50,7 @@ def questionIdentifierAgent(state: AgentState):
         HumanMessage(content=state['question']),
     ]
 
-    response = chat_llm(messages)
+    response = chat_ollama(messages)
 
     return {"question_type": response}
 
@@ -63,19 +62,19 @@ def accountAgent(state: AgentState):
     print("\n--- ACCOUNT AGENT ---")
 
     prompt = f"""
-        pertanyaan : {state['question']}
+        Pertanyaan : {state['question']}
         Dari pertanyaan diatas hasilkan JSON tanpa docstring, awalan, atau akhiran apapun, karena JSON tersebut akan dikonversi ke list.
         Berikut adalah key pada json tersebut:
         - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka kembalikan string kosong (""),
-        - "EmailType": gunakan salah satu dari pilihan berikut sesuai dengan teks dari user : 
-            - UNDIKSHA EMAIL (Ketika dari pernyataan user jelas menyebutkan  "Akun Google", jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
-            - SSO EMAIL (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
-            - HYBRID (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
-            - INCOMPLETE INFORMATION (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
+        - "EmailType": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user : 
+            - "GOOGLE EMAIL" (Ketika dari pernyataan user jelas menyebutkan "Akun Google", jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
+            - "SSO EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
+            - "HYBRID EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
+            - "INCOMPLETE INFORMATION" (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
     """
 
     response = chat_openai(question=prompt, model='gpt-4o-mini')
-    # response = chat_llm(question=prompt, model='gemma2')
+    # response = chat_ollama(question=prompt, model='gemma2')
 
     print(response)
 
@@ -83,19 +82,19 @@ def accountAgent(state: AgentState):
         result = json.loads(response)     
         email = result.get('Email')
         emailType = result.get('EmailType')
-        print("email: ", email)
-        print("emailType: ", emailType)
+        
 
         if email and emailType: # Cek apakah email dan emailType ada atau tidak None
+            reason = None
             if email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"):
-                if emailType == 'SSO UNDIKSHA':
+                if emailType == 'SSO EMAIL':
                     return {"resetPasswordType": "SSO EMAIL"}
-                elif emailType == 'UNDIKSHA EMAIL':
-                    return {"resetPasswordType": "UNDIKSHA EMAIL"}
-                elif emailType == 'HYBRID':
+                elif emailType == 'GOOGLE EMAIL':
+                    return {"resetPasswordType": "GOOGLE EMAIL"}
+                elif emailType == 'HYBRID EMAIL':
                     return {"resetPasswordType": "HYBRID EMAIL"}
                 else:
-                    return {"resetPasswordType": "INCOMPLETE INFORMATION"} # INCOMPLETE INFORMATION
+                    return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason} # INCOMPLETE INFORMATION
             else:
                 reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
                 print(reason)
@@ -112,12 +111,10 @@ def accountAgent(state: AgentState):
             reason = 'user tidak menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha dan tidak menyebutkan email yang akan direset passwordnya'
             print(reason)
             return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason}
-        
-        
 
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         # Handle the case where the response is not valid JSON
-        "Ada yang salah bung"
+        print(f"Err: {e}")
 
 def routeToSpecificEmailAgent(state: AgentState):
     return state['resetPasswordType']
@@ -128,8 +125,8 @@ def SSOEmailAgent(state: AgentState):
     print('Baik sekarang kamu bisa cek di Email undiksha mu')
     pass
 
-def UndikshaGoogleEmailAgent(state: AgentState):
-    print("--- UNDIKSHA GOOGLE EMAIL AGENT ---")
+def GoogleEmailAgent(state: AgentState):
+    print("--- GOOGLE EMAIL AGENT ---")
     pass
 
 def HybridEmailAgent(state: AgentState):
@@ -143,7 +140,7 @@ def incompleteInformationAgent(state: AgentState):
     Diakhir selalu selipkan kalimat seperti jika kebingungan terkait permasalahan tersebut bisa menghubungi UPA TIK (Unit Penunjang Akademik Teknologi Informasi dan Komunikasi) Undiksha. Buat agar jawaban yang kamu berikan nyambung dengan pertanyaan yang diberikan
     """
 
-    response = chat_llm(question=prompt, model='gemma2')
+    response = chat_ollama(question=prompt, model='gemma2')
 
     print(response)
 
@@ -182,7 +179,7 @@ workflow.add_node('news', newsAgent)
 workflow.add_node('general', generalAgent)
 workflow.add_node('outOfContext', outOfContextAgent)
 workflow.add_node('SSOEmailAgent', SSOEmailAgent)
-workflow.add_node('UndikshaGoogleEmailAgent', UndikshaGoogleEmailAgent)
+workflow.add_node('GoogleEmailAgent', GoogleEmailAgent)
 workflow.add_node('HybridEmailAgent', HybridEmailAgent)
 workflow.add_node('incompleteInformationAgent', incompleteInformationAgent)
 
@@ -205,7 +202,7 @@ workflow.add_conditional_edges(
     'account',
     routeToSpecificEmailAgent, {
         "SSO EMAIL": 'SSOEmailAgent',
-        "UNDIKSHA EMAIL": 'UndikshaGoogleEmailAgent',
+        "GOOGLE EMAIL": 'GoogleEmailAgent',
         "HYBRID EMAIL": 'HybridEmailAgent',
         "INCOMPLETE INFORMATION": 'incompleteInformationAgent',
     }
@@ -224,5 +221,5 @@ workflow.add_edge('incompleteInformationAgent', END)
 graph = workflow.compile()
 
 
-question = 'siapa ingin reset password dan mengetahui siapa rektor undiksha'
+question = 'saya ingin reset password dengan email google gelgel@undiksha.ac.id'
 graph.invoke({'question': question})

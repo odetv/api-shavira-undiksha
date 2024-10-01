@@ -9,10 +9,10 @@ base_url = os.getenv('BASE_URL')
 openai_api_key = os.getenv('OPENAI_API')
 
 
-def chat_llm(question: str, model = 'gemma2'):
+def chat_ollama(question: str, model = 'gemma2'):
     
-    llm = Ollama(base_url=base_url, model=model, verbose=True)
-    result = llm.invoke(question)
+    ollama = Ollama(base_url=base_url, model=model, verbose=True)
+    result = ollama.invoke(question)
 
     return result
 

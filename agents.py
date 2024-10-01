@@ -9,7 +9,6 @@ from llm import chat_ollama, chat_openai
 import os
 import json
 
-# Memuat file .env
 load_dotenv()
 
 base_url = os.getenv('BASE_URL')
@@ -113,9 +112,9 @@ def accountAgent(state: AgentState):
             print(reason)
             return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason}
 
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         # Handle the case where the response is not valid JSON
-        "Ada yang salah bung"
+        print(f"Err: {e}")
 
 def routeToSpecificEmailAgent(state: AgentState):
     return state['resetPasswordType']

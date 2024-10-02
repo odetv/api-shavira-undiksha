@@ -65,13 +65,13 @@ def accountAgent(state: AgentState):
     prompt = f"""
         pertanyaan : {state['question']}
         Dari pertanyaan diatas hasilkan JSON tanpa docstring, awalan, atau akhiran apapun, karena JSON tersebut akan dikonversi ke list.
-        Berikut adalah key pada json tersebut:
+        Berikut adalah key pada json (dictionary) tersebut:
         - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka kembalikan string kosong (""),
         - "EmailType": gunakan salah satu dari pilihan berikut sesuai dengan teks dari user : 
-            - UNDIKSHA EMAIL (Ketika dari pernyataan user jelas menyebutkan  "Akun Google", jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
+            - UNDIKSHA EMAIL (Ketika dari pernyataan user jelas menyebutkan  "Akun Google Undiksha", bukan akun google diluar domain @undiksha.ac.id, jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
             - SSO EMAIL (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
             - HYBRID (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
-            - INCOMPLETE INFORMATION (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
+            - INCOMPLETE INFORMATION (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha, dan ketika user meminta reset akun google namun)
     """
 
     response = chat_openai(question=prompt, model='gpt-4o-mini')
@@ -85,31 +85,25 @@ def accountAgent(state: AgentState):
         emailType = result.get('EmailType')
         print("email: ", email)
         print("emailType: ", emailType)
+        validUndikshaEmail = email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id")
 
-        if email and emailType: # Cek apakah email dan emailType ada atau tidak None
-            if email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"):
-                if emailType == 'SSO UNDIKSHA':
+        if email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
+            if validUndikshaEmail:
+                if emailType == 'SSO EMAIL':
                     return {"resetPasswordType": "SSO EMAIL"}
                 elif emailType == 'UNDIKSHA EMAIL':
                     return {"resetPasswordType": "UNDIKSHA EMAIL"}
                 elif emailType == 'HYBRID':
                     return {"resetPasswordType": "HYBRID EMAIL"}
                 else:
-                    return {"resetPasswordType": "INCOMPLETE INFORMATION"} # INCOMPLETE INFORMATION
+                    reason = "Tidak disebutkan apakah user ingin reset password Akun google Undiksha atau SSO E-Ganesha"
+                    return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason} # INCOMPLETE INFORMATION
             else:
                 reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
                 print(reason)
                 return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason}
-        elif email and not emailType:
-            reason = 'user menyebtkan emailnya namun tidak menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha'
-            print(reason)
-            return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason}
-        elif not email and emailType:
-            reason = 'Tidak disebutkan email yang ingin direset passwordnya'
-            print(reason)
-            return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason}
         else:
-            reason = 'user tidak menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha dan tidak menyebutkan email yang akan direset passwordnya'
+            reason = 'user tidak menyebutkan alamat email'
             print(reason)
             return {"resetPasswordType": "INCOMPLETE INFORMATION", "incompleteReason": reason}
         
@@ -121,12 +115,12 @@ def accountAgent(state: AgentState):
 
 def routeToSpecificEmailAgent(state: AgentState):
     return state['resetPasswordType']
+
     
 
 def SSOEmailAgent(state: AgentState):
     print("--- SSO EMAIL AGENT ---")
-    print('Baik sekarang kamu bisa cek di Email undiksha mu')
-    pass
+    
 
 def UndikshaGoogleEmailAgent(state: AgentState):
     print("--- UNDIKSHA GOOGLE EMAIL AGENT ---")
@@ -139,8 +133,11 @@ def HybridEmailAgent(state: AgentState):
 def incompleteInformationAgent(state: AgentState):
     print("\n--- INCOMPLETE INFORMATION AGENT ---")
     prompt = f"""
-        Kamu adalah agen yang bertugas menjawab pertanyaan user yang hendak mereset password namun ada informasi yang kurang lengkap. Setiap menjawab pertanyaan selalu awalli dengan Salam Harmoni. Pertanyaan dari user adalah:  {state['question']}, sedangkan alasan tidak validnya karena : {state['incompleteReason']}
-    Diakhir selalu selipkan kalimat seperti jika kebingungan terkait permasalahan tersebut bisa menghubungi UPA TIK (Unit Penunjang Akademik Teknologi Informasi dan Komunikasi) Undiksha. Buat agar jawaban yang kamu berikan nyambung dengan pertanyaan yang diberikan
+        Kamu adalah agen yang bertugas menjawab pertanyaan user yang hendak mereset password namun ada informasi yang kurang lengkap. Ikuti aturan ini:
+        - Kamu hanya difokuskan untuk akun Google atau SSO Undiksha (@undiksha.ac.id atau @student.undiksha.ac.id) dan tidak untuk akun google selain itu. 
+        - Setiap menjawab pertanyaan selalu awalli dengan Salam Harmoni. 
+        - Diakhir selalu selipkan kalimat seperti jika kebingungan terkait permasalahan tersebut bisa menghubungi UPA TIK (Unit Penunjang Akademik Teknologi Informasi dan Komunikasi) Undiksha. Buat agar jawaban yang kamu berikan nyambung dengan pertanyaan yang diberikan
+        Pertanyaan dari user adalah:  {state['question']}, sedangkan alasan tidak validnya karena : {state['incompleteReason']}
     """
 
     response = chat_llm(question=prompt, model='gemma2')
@@ -149,7 +146,13 @@ def incompleteInformationAgent(state: AgentState):
 
 
 # ===============================================================================
+def resetPasswordAgent(state: AgentState):
+    pass
 
+def identityVerificatorAgent(state: AgentState):
+    pass
+
+# ===================================================================================
 def academicAgent(state: AgentState):
     print("--- ACADEMIC AGENT ---")
     pass
@@ -185,6 +188,8 @@ workflow.add_node('SSOEmailAgent', SSOEmailAgent)
 workflow.add_node('UndikshaGoogleEmailAgent', UndikshaGoogleEmailAgent)
 workflow.add_node('HybridEmailAgent', HybridEmailAgent)
 workflow.add_node('incompleteInformationAgent', incompleteInformationAgent)
+# workflow.add_node('resetPasswordAgent', resetPasswordAgent)
+# workflow.add_node('identityVerificatorAgent', identityVerificatorAgent)
 
 # Definisikan Edge
 
@@ -201,6 +206,8 @@ workflow.add_conditional_edges(
         "OUT OF CONTEXT \n": 'outOfContext',
     }
 )
+
+# AGEN KELAS 2
 workflow.add_conditional_edges(
     'account',
     routeToSpecificEmailAgent, {
@@ -211,18 +218,18 @@ workflow.add_conditional_edges(
     }
 )
 
-# AGEN KELAS 2
 workflow.add_edge('academic', END)
 workflow.add_edge('student', END)
 workflow.add_edge('news', END)
 workflow.add_edge('general', END)
 
 # AGEN KELAS 3
+workflow.add_edge('SSOEmailAgent', END) 
+workflow.add_edge('UndikshaGoogleEmailAgent', END)
 workflow.add_edge('incompleteInformationAgent', END)
 
 # Compile Graph
 graph = workflow.compile()
 
-
-question = 'siapa ingin reset password dan mengetahui siapa rektor undiksha'
+question = 'Selamat siang Bu, izin bertanya semisal di hari yang kami pilih terdapat jadwal dikarenakan dosen yang meminta pindah jam, apakah kami diizinkan mengikuti kelas di hari lain Bu? Mohon informasinya, terima kasih'
 graph.invoke({'question': question})

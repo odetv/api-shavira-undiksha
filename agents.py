@@ -1,6 +1,7 @@
 from langgraph.graph import END, START, StateGraph
 from typing import TypedDict, Literal, Optional
 from langchain.memory import ConversationBufferMemory
+from utils.graph_image import get_graph_image
 from langchain_community.llms import Ollama
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -42,7 +43,7 @@ def questionIdentifierAgent(state: AgentState):
         - GENERAL - Pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant) dan
           menanyakan hal umum terkait Undiksha.
         - OUT OF CONTEXT - Jika tidak tahu jawabannya berdasarkan konteks yang diberikan.
-        Hasilkan hanya satu kata (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL, OUT OF CONTEXT) berdasarkan pertanyaan yang diberikan.
+        Hasilkan dalam array tanpa awalan dan akhiran apapun (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL, OUT OF CONTEXT) berdasarkan pertanyaan yang diberikan.
     """
 
     messages = [
@@ -63,7 +64,7 @@ def accountAgent(state: AgentState):
 
     prompt = f"""
         Pertanyaan : {state['question']}
-        Hasilkan dalam bentuk JSON tanpa pembungkus.
+        Hasilkan dalam bentuk dictionary murni tanpa pembungkus, awalan dan akhiran apapun.
         Berikut key pada JSON tersebut:
         - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka null,
         - "EmailType": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user, yaitu:
@@ -84,7 +85,7 @@ def accountAgent(state: AgentState):
         emailType = result.get('EmailType')
         print("email: ", email)
         print("emailType: ", emailType)
-        validUndikshaEmail = email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id")
+        validUndikshaEmail = email and (email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"))
 
         if email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
             if validUndikshaEmail:
@@ -131,7 +132,7 @@ def incompleteInformationAgent(state: AgentState):
     print("\n--- INCOMPLETE INFORMATION AGENT ---")
     prompt = f"""
         Kamu adalah agen yang bertugas menjawab pertanyaan user yang hendak mereset password namun ada informasi yang kurang lengkap. Ikuti aturan ini:
-        - Kamu hanya difokuskan untuk akun Google atau SSO Undiksha (@undiksha.ac.id atau @student.undiksha.ac.id) dan tidak untuk akun google selain itu. 
+        - jelaskan bahwa kamu hanya menerima akun Google atau SSO Undiksha (@undiksha.ac.id atau @student.undiksha.ac.id) dan tidak untuk akun google selain itu. 
         - Setiap menjawab pertanyaan selalu awalli dengan Salam Harmoni. 
         - Diakhir selalu selipkan kalimat seperti jika kebingungan terkait permasalahan tersebut bisa menghubungi UPA TIK (Unit Penunjang Akademik Teknologi Informasi dan Komunikasi) Undiksha. Buat agar jawaban yang kamu berikan nyambung dengan pertanyaan yang diberikan
         Pertanyaan dari user adalah:  {state['question']}, sedangkan alasan tidak validnya karena : {state['incompleteReason']}
@@ -182,7 +183,7 @@ workflow.add_node('news', newsAgent)
 workflow.add_node('general', generalAgent)
 workflow.add_node('outOfContext', outOfContextAgent)
 workflow.add_node('SSOEmailAgent', SSOEmailAgent)
-workflow.add_node('GoogleEmailAgent', GoogleEmailAgent)
+workflow.add_node('UndikshaGoogleEmailAgent', GoogleEmailAgent)
 workflow.add_node('HybridEmailAgent', HybridEmailAgent)
 workflow.add_node('incompleteInformationAgent', incompleteInformationAgent)
 # workflow.add_node('resetPasswordAgent', resetPasswordAgent)
@@ -209,7 +210,7 @@ workflow.add_conditional_edges(
     'account',
     routeToSpecificEmailAgent, {
         "SSO EMAIL": 'SSOEmailAgent',
-        "GOOGLE EMAIL": 'GoogleEmailAgent',
+        "GOOGLE EMAIL": 'UndikshaGoogleEmailAgent',
         "HYBRID EMAIL": 'HybridEmailAgent',
         "INCOMPLETE INFORMATION": 'incompleteInformationAgent',
     }
@@ -224,9 +225,13 @@ workflow.add_edge('general', END)
 workflow.add_edge('SSOEmailAgent', END) 
 workflow.add_edge('UndikshaGoogleEmailAgent', END)
 workflow.add_edge('incompleteInformationAgent', END)
-
 # Compile Graph
 graph = workflow.compile()
 
-question = 'saya ingin reset password dengan email google'
+# Buat Gambar Graph
+get_graph_image(graph)
+
+question = 'saya ingin reset password'
 graph.invoke({'question': question})
+
+

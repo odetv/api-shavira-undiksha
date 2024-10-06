@@ -42,7 +42,7 @@ def getResponseAndContext(question: str) -> str:
         - NEWS - Pertanyaan yang berkaitan dengan berita-berita terkini di Universitas pendidikan Ganesha.
         - GENERAL - Pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant) dan
           menanyakan hal umum terkait Undiksha.
-        - OUT OF CONTEXT - Jika tidak tahu jawabannya berdasarkan konteks yang diberikan.
+        - OUT OF CONTEXT - Jika tidak tahu jawabannya berdasarkan konteks yang diberikan, serta tidak sesuai dengan 5 jenis pertanyaan diatas.
         Hasilkan  (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL, OUT OF CONTEXT) berdasarkan pertanyaan yang diberikan.
     """
 
@@ -54,6 +54,8 @@ def getResponseAndContext(question: str) -> str:
     response = chat_ollama(messages)
 
     this_context = str_to_list(response)
+
+    print(f"Context: {this_context}")
 
     return response, this_context
 
@@ -67,6 +69,58 @@ def questionIdentifierAgent(state: AgentState) :
 
 def accountAgent(state: AgentState):
     print('--- ACCOUNT AGENT ---')
+
+    prompt = f"""
+        Pertanyaan : {state['question']}
+        Hasilkan dalam bentuk dictionary murni tanpa pembungkus, awalan dan akhiran apapun.
+        Berikut key pada JSON tersebut:
+        - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka null,
+        - "EmailType": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user, yaitu:
+            - "GOOGLE_EMAIL" (Ketika dari pernyataan user jelas menyebutkan "Akun Google", jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
+            - "SSO_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
+            - "HYBRID_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
+            - "INCOMPLETE_INFORMATION" (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
+    """
+
+    response = chat_openai(question=prompt, model='gpt-4o-mini')
+    # response = chat_ollama(question=prompt, model='gemma2')
+
+    print(response)
+
+    try:
+        result = json.loads(response)     
+        email = result.get('Email')
+        emailType = result.get('EmailType')
+        print("email: ", email)
+        print("emailType: ", emailType)
+        validUndikshaEmail = email and (email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"))
+
+        if email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
+            if validUndikshaEmail:
+                if emailType == 'SSO_EMAIL':
+                    return {"resetPasswordType": "SSO_EMAIL"}
+                elif emailType == 'GOOGLE_EMAIL':
+                    return {"resetPasswordType": "GOOGLE_EMAIL"}
+                elif emailType == 'HYBRID_EMAIL':
+                    return {"resetPasswordType": "HYBRID_EMAIL"}
+                else:
+                    reason = "Tidak disebutkan apakah user ingin reset password Akun google Undiksha atau SSO E-Ganesha"
+                    return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason} # INCOMPLETE INFORMATION
+            else:
+                reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
+                print(reason)
+                return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason}
+        else:
+            reason = 'user tidak menyebutkan alamat email'
+            print(reason)
+            return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason}
+
+    except json.JSONDecodeError as e:
+        # Handle the case where the response is not valid JSON
+        print(f"Err: {e}")
+
+def routeToSpecificEmailAgent(state: AgentState):
+    return state['resetPasswordType']
 
 def academicAgent(state: AgentState):
     print('--- ACADEMIC AGENT ---')
@@ -86,53 +140,105 @@ def outOfContextAgent(state: AgentState):
 def writterAgent(state: AgentState):
     print('--- WRITTER AGENT ---')
 
+def SSOEmailAgent(state: AgentState):
+    print('--- SSO EMAIL AGENT ---')
+
+def GoogleEmailAgent(state: AgentState):
+    print('--- GOOGLE EMAIL AGENT ---')
+
+def HybridEmailAgent(state: AgentState):
+    print('--- HYBRID EMAIL AGENT ---')
+
+def incompleteInformationAgent(state: AgentState):
+    print('--- INCOMPLETE INFORMATION AGENT ---')
+
+def resetPasswordAgent(state: AgentState):
+    print("-- RESET PASSWORD AGENT --")
+
+def identityVerificatorAgent(state: AgentState):
+    print("-- IDENTITY VERIFICATOR AGENT --")
+
+def incompleteSSOStatment(state: AgentState):
+    print("-- INCOMPLETE SSO STATEMENT --")
 
 def build_graph(question):
-    builder = StateGraph(AgentState)
-    builder.add_node("questionIdentifier", questionIdentifierAgent)
-    builder.add_node("writter", writterAgent)
-    builder.add_edge(START, "questionIdentifier")
+    workflow = StateGraph(AgentState)
+    # level 1
+    workflow.add_node("questionIdentifier", questionIdentifierAgent)
+    workflow.add_node("writter", writterAgent)
+    workflow.add_edge(START, "questionIdentifier")
 
-    # Apakah builder bisa dilempar ke fungsi lain???
+    # Apakah workflow bisa dilempar ke fungsi lain???
 
     _, context = getResponseAndContext(question)
 
     if 'ACCOUNT' in context:
-        builder.add_node("account", accountAgent)
-        builder.add_edge("questionIdentifier", "account")
+        # Level 2
+        workflow.add_node("account", accountAgent)
+
+        # level 3
+        workflow.add_node("SSOEmail", SSOEmailAgent)
+        workflow.add_node("UndikshaGoogleEmail", GoogleEmailAgent)
+        workflow.add_node("HybridEmail", HybridEmailAgent)
+        workflow.add_node("incompleteInformation", incompleteInformationAgent)
+
+        # level 4
+        workflow.add_node("resetPassword", resetPasswordAgent)
+        workflow.add_node("identityVerificator", identityVerificatorAgent)
+        workflow.add_node("incompleteSSOStatment", incompleteSSOStatment)
+
+
+        # Define Edge
+        workflow.add_edge("questionIdentifier", "account")
+        workflow.add_edge("SSOEmailAgent", "writter")
+
+
+        workflow.add_edge("UndikshaGoogleEmailAgent", "writter")
+        workflow.add_edge("HybridEmailAgent", "writter")
+        workflow.add_edge("incompleteInformationAgent", "writter")
+        
+        workflow.add_conditional_edges(
+            'account',
+            routeToSpecificEmailAgent, {
+                'SSO_EMAIL': 'SSOEmail',
+                'GOOGLE_EMAIL': 'UndikshaGoogleEmail',
+                'HYBRID_EMAIL': 'HybridEmail',
+                'INCOMPLETE_INFORMATION': 'incompleteInformation',
+            }
+        )
 
     if "ACADEMIC" in context:
-        builder.add_node("academic", academicAgent)
-        builder.add_edge("questionIdentifier", "academic")
-        builder.add_edge("academic", "writter")
+        workflow.add_node("academic", academicAgent)
+        workflow.add_edge("questionIdentifier", "academic")
+        workflow.add_edge("academic", "writter")
 
     if "STUDENT" in context:
-        builder.add_node("student", studentAgent)
-        builder.add_edge("questionIdentifier", "student")
-        builder.add_edge("student", "writter")
+        workflow.add_node("student", studentAgent)
+        workflow.add_edge("questionIdentifier", "student")
+        workflow.add_edge("student", "writter")
 
     if "NEWS" in context:
-        builder.add_node("news", newsAgent)
-        builder.add_edge("questionIdentifier", "news")
-        builder.add_edge("news", "writter")
+        workflow.add_node("news", newsAgent)
+        workflow.add_edge("questionIdentifier", "news")
+        workflow.add_edge("news", "writter")
 
     if "GENERAL" in context:
-        builder.add_node("general", generalAgent)
-        builder.add_edge("questionIdentifier", "general")
-        builder.add_edge("general", "writter")
+        workflow.add_node("general", generalAgent)
+        workflow.add_edge("questionIdentifier", "general")
+        workflow.add_edge("general", "writter")
 
-    if "OUT OF CONTEXT" in context:
-        builder.add_node("outOfContext", outOfContextAgent)
-        builder.add_edge("questionIdentifier", "outOfContext")
-        builder.add_edge("outOfContext", END)
+    if "OUT OF CONTEXT" in context :
+        workflow.add_node("outOfContext", outOfContextAgent)
+        workflow.add_edge("questionIdentifier", "outOfContext")
+        workflow.add_edge("outOfContext", "writter")
 
-    builder.add_edge("writter", END)
+    workflow.add_edge("writter", END)
 
-    graph = builder.compile()
+    graph = workflow.compile()
     graph.invoke({'question': question})
     get_graph_image(graph)
 
-build_graph("apa informasi akademik terkini dan berikan cara reset password atm")
+build_graph("saya ingin reset password SSO dan apa berita undiksha saat ini")
 
 
 

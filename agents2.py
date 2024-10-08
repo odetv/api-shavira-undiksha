@@ -1,20 +1,25 @@
 from langgraph.graph import END, START, StateGraph
-from typing import TypedDict, Literal, Optional
+from typing import TypedDict, Literal, Optional, Annotated, Sequence
 from langchain.memory import ConversationBufferMemory
 from utils.graph_image import get_graph_image
 from utils.str_converter import str_to_list
 from langchain_community.llms import Ollama
 from openai import OpenAI
+from operator import add
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from llm import chat_ollama, chat_openai
-import os
+import os, re
 import json
 
 load_dotenv()
 
 base_url = os.getenv('BASE_URL')
 openai_api_key = os.getenv('OPENAI_API')
+
+class AnswerState(TypedDict):
+    agent = None
+    answer = None
 
 class AgentState(TypedDict):
     context = None
@@ -25,83 +30,82 @@ class AgentState(TypedDict):
     accountType : Optional[str] = None
     incompleteReason : Optional[str] = None
     resetPasswordType : Optional[str] = None
+    agentAnswer : Annotated[Sequence[AnswerState], add]
+
 
 
 def getResponseAndContext(question: str) -> str:
     prompt = """
-        Anda adalah analis pertanyaan pengguna. Tugas anda adalah mengklasifikasikan pertanyaan yang masuk.
-        Tergantung pada jawaban Anda, pertanyaan akan diarahkan ke tim yang tepat, jadi tugas Anda sangat penting.
-        Ingat, Anda perlu memvalidasi pertanyaan harus pada konteks di Universitas Pendidikan Ganesha (Undiksha) saja.
-        jawaban HANYA dalam format list Python yang valid, contoh: ["CATEGORY1"] atau ["CATEGORY1", "CATEGORY2"].
-        Perhatikan pertanyaan yang diberikan, harus cek pertanyaan agar spesifik lengkap sesuai konteks, jika tidak lengkap maka itu bisa jadi tidak sesuai konteks.
-        Ada 6 kemungkinan pertanyaan yang diajukan:
+        Anda adalah seoarang analis pertanyaan pengguna.
+        Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
+        Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
+        Ada 6 konteks pertanyaan yang diajukan:
         - ACCOUNT - Pertanyaan yang berkaitan dengan mengatur ulang password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha.
         - ACADEMIC - Pertanyaan yang berkaitan dengan informasi akademik (mata kuliah, jadwal kuliah, pembayaran Uang Kuliah Tunggal, dosen, program studi).
         - STUDENT - Pertanyaan berkaitan dengan informasi kemahasiswaan seperti organisasi kemahasiswaan, kegiatan kemahasiswaan, Unit Kegiatan Mahasiswa (UKM), Komunitas dan lain-lain.
         - NEWS - Pertanyaan yang berkaitan dengan berita-berita terkini di Universitas pendidikan Ganesha.
         - GENERAL - Pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant) dan
           menanyakan hal umum terkait Undiksha.
-        - OUT OF CONTEXT - Jika tidak tahu jawabannya berdasarkan konteks yang diberikan, serta tidak sesuai dengan 5 jenis pertanyaan diatas.
-        Hasilkan  (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL, OUT OF CONTEXT) berdasarkan pertanyaan yang diberikan.
+        - OUT_OF_CONTEXT - Jika tidak tahu jawabannya berdasarkan konteks yang diberikan, serta tidak sesuai dengan 5 jenis pertanyaan diatas.
+        Hasilkan hanya kata dari pilihan berikut (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL, OUT_OF_CONTEXT) berdasarkan pertanyaan yang diberikan, kemungkinan konteks pertanyaan lebih dari satu maka pisahkan dengan tanda koma.
     """
 
     messages = [
-        SystemMessage(content=prompt),
-        HumanMessage(content=question),
-    ]
-    
+            SystemMessage(content=prompt),
+            HumanMessage(content=question),
+        ]
+
     response = chat_ollama(messages)
 
-    this_context = str_to_list(response)
+    fixed_response = response.strip().lower()
 
-    print(f"Context: {this_context}")
+    result = re.findall(r'\b\w+\b', fixed_response)
 
-    return response, this_context
+    return response, result
 
 
 def questionIdentifierAgent(state: AgentState) :
-    print('--- QUESTION IDENTIFIER AGENT ---')
 
     response, this_context = getResponseAndContext(state['question'])
+    print(state["question"])
+    print(this_context)
 
+    print('--- QUESTION IDENTIFIER AGENT ---\n\n')
     return {"question_type": response, "context": this_context}
 
 def accountAgent(state: AgentState):
-    print('--- ACCOUNT AGENT ---')
 
     prompt = f"""
         Pertanyaan : {state['question']}
-        Hasilkan dalam bentuk dictionary murni tanpa pembungkus, awalan dan akhiran apapun.
-        Berikut key pada JSON tersebut:
-        - "Email" : Email yang akan direset passwordnya, jika tidak disebutkan emailnya maka null,
-        - "EmailType": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user, yaitu:
-            - "GOOGLE_EMAIL" (Ketika dari pernyataan user jelas menyebutkan "Akun Google", jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE INFORMATION), 
+        anda adalah agen bertugas menjawab pertanyaan dengan spesifik
+        - Apa email yang akan direset passwordnya, jika tidak disebutkan emailnya maka null,
+        - Apa jenis email yang akan direset passwordnya, jawablah sesuai pilihan dibawah:
+            - "GOOGLE_EMAIL" (ketika user menyebutkan jelas bahwa akan mereset akun google, jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE_INFORMATION), 
             - "SSO_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
             - "HYBRID_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
-            - "INCOMPLETE_INFORMATION" (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
-        - "LoginStatus": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user, yaitu:
+            - "INCOMPLETE_INFORMATION" (ketika dari pernyataan user tidak menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
+        - Apa status login dari pertanyaan diatas, jawablah sesuai pilihan dibawah:
             - "TRUE" (Ketika user secara jelas bahwa akun undikshanya sudah diloginkan di perangkat baik hp/laptop/komputer),
             - "FALSE" (Ketika user secara jelas bahwa akun undikshanya belum diloginkan di perangkat baik hp/laptop/komputer)
             - "NO_INFO" (Ketika user tidak jelas apakah akun undikshanya sudah diloginkan di perangkat baik hp/laptop/komputer atau belum)
+        jawab pertanyaan diatas, dengan jawaban dipisah dengan tanda koma, hasilkan hanya jawabannya saja
     """
 
     response = chat_openai(question=prompt, model='gpt-4o-mini')
-    # response = chat_ollama(question=prompt, model='gemma2')
 
-    print(response)
+    result = [item.strip() for item in response.split(",")]
 
-    try:
-        result = json.loads(response)     
-        email = result.get('Email')
-        emailType = result.get('EmailType')
-        loginStatus = result.get('LoginStatus')
+    try:    
+        email = result[0]
+        emailType = result[1]
+        loginStatus = result[2]
         print("email: ", email)
         print("emailType: ", emailType)
         print("loginStatus: ", loginStatus)
         validUndikshaEmail = email and (email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"))
         reason = None
 
-        if email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
+        if "null" not in email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
             if validUndikshaEmail:
                 if emailType == 'SSO_EMAIL':
                     resetPasswordType = "SSO_EMAIL"
@@ -115,18 +119,19 @@ def accountAgent(state: AgentState):
             else:
                 resetPasswordType = "INCOMPLETE_INFORMATION"
                 reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
-                print(reason)
+                
         else:
             resetPasswordType = "INCOMPLETE_INFORMATION"
             reason = 'user tidak menyebutkan alamat email'
-            print(reason)
-            return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason}
-        
+            
+        print(f"Alasan incomplete: {reason}")
+        print('--- ACCOUNT AGENT ---\n\n')
         return {"resetPasswordType": resetPasswordType, "incompleteReason": reason, "loginStatus": loginStatus}
 
     except json.JSONDecodeError as e:
         # Handle the case where the response is not valid JSON
         print(f"Err: {e}")
+        
 
 def routeToSpecificEmailAgent(state: AgentState):
     return state['resetPasswordType']
@@ -138,19 +143,34 @@ def academicAgent(state: AgentState):
     print('--- ACADEMIC AGENT ---')
 
 def studentAgent(state: AgentState):
-    print('--- STUDENT AGENT ---')
+    print('--- STUDENT AGENT ---\n\n')
 
 def newsAgent(state: AgentState):
-    print('--- NEWS AGENT ---')
+    print('--- NEWS AGENT ---\n\n')
 
 def generalAgent(state: AgentState):
-    print('--- GENERAL AGENT ---')
+    print("Informasi umum Undiksha.")
+    print('--- GENERAL AGENT ---\n\n')
+
+    answer = "Informasi umum Undiksha."
+    agent = "GENERAL"
+
+    agentOpinion: AnswerState = {
+        "agent": agent,
+        "answer": answer
+    }
+
+    return {"agentAnswer": [agentOpinion]}
 
 def outOfContextAgent(state: AgentState):
     print('--- OUT OF CONTEXT AGENT ---')
 
 def writterAgent(state: AgentState):
+    print(state["agentAnswer"])
     print('--- WRITTER AGENT ---')
+
+    
+
 
 def SSOEmailAgent(state: AgentState):
     print('--- SSO EMAIL AGENT ---')
@@ -173,6 +193,15 @@ def identityVerificatorAgent(state: AgentState):
 def incompleteSSOStatment(state: AgentState):
     print("-- INCOMPLETE SSO STATEMENT --")
 
+    agent = "INCOMPLETE SSO STATEMENT"
+    answer = "ini incomplete"
+    agentOpinion: AnswerState = {
+        "agent": agent,
+        "answer": answer
+    }
+
+    return {"agentAnswer": [agentOpinion]}
+
 def build_graph(question):
     workflow = StateGraph(AgentState)
     # level 1
@@ -184,7 +213,7 @@ def build_graph(question):
 
     _, context = getResponseAndContext(question)
 
-    if 'ACCOUNT' in context:
+    if 'account' in context:
         # Level 2
         workflow.add_node("account", accountAgent)
 
@@ -230,27 +259,27 @@ def build_graph(question):
 
 
 
-    if "ACADEMIC" in context:
+    if "academic" in context:
         workflow.add_node("academic", academicAgent)
         workflow.add_edge("questionIdentifier", "academic")
         workflow.add_edge("academic", "writter")
 
-    if "STUDENT" in context:
+    if "student" in context:
         workflow.add_node("student", studentAgent)
         workflow.add_edge("questionIdentifier", "student")
         workflow.add_edge("student", "writter")
 
-    if "NEWS" in context:
+    if "news" in context:
         workflow.add_node("news", newsAgent)
         workflow.add_edge("questionIdentifier", "news")
         workflow.add_edge("news", "writter")
 
-    if "GENERAL" in context:
+    if "general" in context:
         workflow.add_node("general", generalAgent)
         workflow.add_edge("questionIdentifier", "general")
         workflow.add_edge("general", "writter")
 
-    if "OUT OF CONTEXT" in context :
+    if "out_of_context" in context :
         workflow.add_node("outOfContext", outOfContextAgent)
         workflow.add_edge("questionIdentifier", "outOfContext")
         workflow.add_edge("outOfContext", "writter")
@@ -261,7 +290,7 @@ def build_graph(question):
     graph.invoke({'question': question})
     get_graph_image(graph)
 
-build_graph("siapa rektor undiksha, reset akun sso saya")
+build_graph("siapa rektor undiksha, reset akun sudiartika@undiksha.ac.id ")
 
 
 

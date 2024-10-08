@@ -15,7 +15,6 @@ load_dotenv()
 
 base_url = os.getenv('BASE_URL')
 openai_api_key = os.getenv('OPENAI_API')
-context = ""
 
 class AgentState(TypedDict):
     context = None
@@ -80,6 +79,10 @@ def accountAgent(state: AgentState):
             - "SSO_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
             - "HYBRID_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
             - "INCOMPLETE_INFORMATION" (ketika dari pernyataan user tidak jelas menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
+        - "LoginStatus": Gunakan salah satu dari pilihan berikut sesuai dengan teks dari user, yaitu:
+            - "TRUE" (Ketika user secara jelas bahwa akun undikshanya sudah diloginkan di perangkat baik hp/laptop/komputer),
+            - "FALSE" (Ketika user secara jelas bahwa akun undikshanya belum diloginkan di perangkat baik hp/laptop/komputer)
+            - "NO_INFO" (Ketika user tidak jelas apakah akun undikshanya sudah diloginkan di perangkat baik hp/laptop/komputer atau belum)
     """
 
     response = chat_openai(question=prompt, model='gpt-4o-mini')
@@ -91,29 +94,35 @@ def accountAgent(state: AgentState):
         result = json.loads(response)     
         email = result.get('Email')
         emailType = result.get('EmailType')
+        loginStatus = result.get('LoginStatus')
         print("email: ", email)
         print("emailType: ", emailType)
+        print("loginStatus: ", loginStatus)
         validUndikshaEmail = email and (email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"))
+        reason = None
 
         if email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
             if validUndikshaEmail:
                 if emailType == 'SSO_EMAIL':
-                    return {"resetPasswordType": "SSO_EMAIL"}
+                    resetPasswordType = "SSO_EMAIL"
                 elif emailType == 'GOOGLE_EMAIL':
-                    return {"resetPasswordType": "GOOGLE_EMAIL"}
+                    resetPasswordType = "GOOGLE_EMAIL"
                 elif emailType == 'HYBRID_EMAIL':
-                    return {"resetPasswordType": "HYBRID_EMAIL"}
+                    resetPasswordType = "HYBRID_EMAIL"
                 else:
+                    resetPasswordType = "INCOMPLETE_INFORMATION"
                     reason = "Tidak disebutkan apakah user ingin reset password Akun google Undiksha atau SSO E-Ganesha"
-                    return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason} # INCOMPLETE INFORMATION
             else:
+                resetPasswordType = "INCOMPLETE_INFORMATION"
                 reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
                 print(reason)
-                return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason}
         else:
+            resetPasswordType = "INCOMPLETE_INFORMATION"
             reason = 'user tidak menyebutkan alamat email'
             print(reason)
             return {"resetPasswordType": "INCOMPLETE_INFORMATION", "incompleteReason": reason}
+        
+        return {"resetPasswordType": resetPasswordType, "incompleteReason": reason, "loginStatus": loginStatus}
 
     except json.JSONDecodeError as e:
         # Handle the case where the response is not valid JSON
@@ -121,6 +130,9 @@ def accountAgent(state: AgentState):
 
 def routeToSpecificEmailAgent(state: AgentState):
     return state['resetPasswordType']
+
+def checkEmailWaslogged(state: AgentState):
+    return state['loginStatus']
 
 def academicAgent(state: AgentState):
     print('--- ACADEMIC AGENT ---')
@@ -190,12 +202,21 @@ def build_graph(question):
 
         # Define Edge
         workflow.add_edge("questionIdentifier", "account")
-        workflow.add_edge("SSOEmailAgent", "writter")
+        workflow.add_edge("resetPassword", "writter")
+        workflow.add_edge("identityVerificator", "writter")
+        workflow.add_edge("incompleteSSOStatment", "writter")
+        workflow.add_conditional_edges(
+            "SSOEmail",
+            checkEmailWaslogged, {
+                "TRUE": "resetPassword",
+                "FALSE": "identityVerificator",
+                "NO_INFO" : "incompleteSSOStatment",
+            }
+        )
 
-
-        workflow.add_edge("UndikshaGoogleEmailAgent", "writter")
-        workflow.add_edge("HybridEmailAgent", "writter")
-        workflow.add_edge("incompleteInformationAgent", "writter")
+        workflow.add_edge("UndikshaGoogleEmail", "writter")
+        workflow.add_edge("HybridEmail", "writter")
+        workflow.add_edge("incompleteInformation", "writter")
         
         workflow.add_conditional_edges(
             'account',
@@ -206,6 +227,8 @@ def build_graph(question):
                 'INCOMPLETE_INFORMATION': 'incompleteInformation',
             }
         )
+
+
 
     if "ACADEMIC" in context:
         workflow.add_node("academic", academicAgent)
@@ -238,7 +261,7 @@ def build_graph(question):
     graph.invoke({'question': question})
     get_graph_image(graph)
 
-build_graph("saya ingin reset password SSO dan apa berita undiksha saat ini")
+build_graph("siapa rektor undiksha, reset akun sso saya")
 
 
 

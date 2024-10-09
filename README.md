@@ -2,7 +2,7 @@
 
 ## Ringkasan
 
-![Roundmap Langgrap Shavira](/assets/images/SHAVIRA%20ROUNDMAP%20AGENT.png)
+![Roundmap Langgrap Shavira](/assets/images/SHAVIRA%20ROUNDMAP.jpg)
 Proyek ini mengembangkan chatbot berbasis Retrieval Augmented Generation (RAG) untuk Sistem Helpdesk di Universitas Pendidikan Ganesha (Undiksha). Chatbot ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam menggunakan sistem helpdesk.
 
 ## Apa itu RAG?

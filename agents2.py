@@ -31,6 +31,7 @@ class AgentState(TypedDict):
     incompleteReason : Optional[str] = None
     resetPasswordType : Optional[str] = None
     agentAnswer : Annotated[Sequence[AnswerState], add]
+    activeAgent : None
 
 
 
@@ -155,7 +156,7 @@ def generalAgent(state: AgentState):
     answer = "Informasi umum Undiksha."
     agent = "GENERAL"
 
-    agentOpinion: AnswerState = {
+    agentOpinion = {
         "agent": agent,
         "answer": answer
     }
@@ -166,8 +167,9 @@ def outOfContextAgent(state: AgentState):
     print('--- OUT OF CONTEXT AGENT ---')
 
 def writterAgent(state: AgentState):
-    print(state["agentAnswer"])
-    print('--- WRITTER AGENT ---')
+    if len(state["agentAnswer"]) == 2:
+        print(state["agentAnswer"])
+        print('--- WRITTER AGENT ---')
 
     
 
@@ -182,7 +184,19 @@ def HybridEmailAgent(state: AgentState):
     print('--- HYBRID EMAIL AGENT ---')
 
 def incompleteInformationAgent(state: AgentState):
+
     print('--- INCOMPLETE INFORMATION AGENT ---')
+
+    agent = "INCOMPLETE INFORMATION"
+    answer = state["incompleteReason"]
+
+    agentOpinion = {
+        "agent": agent,
+        "answer": answer
+    }
+
+    return {"agentAnswer": [agentOpinion]}
+
 
 def resetPasswordAgent(state: AgentState):
     print("-- RESET PASSWORD AGENT --")
@@ -195,7 +209,7 @@ def incompleteSSOStatment(state: AgentState):
 
     agent = "INCOMPLETE SSO STATEMENT"
     answer = "ini incomplete"
-    agentOpinion: AnswerState = {
+    agentOpinion = {
         "agent": agent,
         "answer": answer
     }
@@ -290,7 +304,7 @@ def build_graph(question):
     graph.invoke({'question': question})
     get_graph_image(graph)
 
-build_graph("siapa rektor undiksha, reset akun sudiartika@undiksha.ac.id ")
+build_graph("siapa rektor undiksha, reset akun saya, berikan saya berita undiksha")
 
 
 

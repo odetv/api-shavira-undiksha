@@ -31,7 +31,7 @@ class AgentState(TypedDict):
     incompleteReason : Optional[str] = None
     resetPasswordType : Optional[str] = None
     agentAnswer : Annotated[Sequence[AnswerState], add]
-    activeAgent : None
+    activeAgent : Optional[list] = None
 
 
 
@@ -72,7 +72,7 @@ def questionIdentifierAgent(state: AgentState) :
     print(this_context)
 
     print('--- QUESTION IDENTIFIER AGENT ---\n\n')
-    return {"question_type": response, "context": this_context}
+    return {"question_type": response, "activeAgent": this_context}
 
 def accountAgent(state: AgentState):
 
@@ -147,7 +147,16 @@ def studentAgent(state: AgentState):
     print('--- STUDENT AGENT ---\n\n')
 
 def newsAgent(state: AgentState):
-    print('--- NEWS AGENT ---\n\n')
+    answer = "Informasi berita Undiksha"
+    agent = "NEWS"
+    print(f'--- {agent} AGENT ---\n\n')
+
+    agentOpinion = {
+        "agent": agent,
+        "answer": answer
+    }
+
+    return {"agentAnswer": [agentOpinion]}
 
 def generalAgent(state: AgentState):
     print("Informasi umum Undiksha.")
@@ -167,12 +176,24 @@ def outOfContextAgent(state: AgentState):
     print('--- OUT OF CONTEXT AGENT ---')
 
 def writterAgent(state: AgentState):
-    if len(state["agentAnswer"]) == 2:
-        print(state["agentAnswer"])
+    if len(state["agentAnswer"]) == len(state["activeAgent"]):
+        print("Ini agen yang aktif", state["activeAgent"])
+        print("Ini jawaban dari agen yang aktif", state["agentAnswer"])
+
+        prompt = f"""
+            pertanyaan: {state["question"]}
+            Urutan agen berdasarkan pertanyaan: {state["activeAgent"]}
+            Jawaban dari tiap agen: {state["agentAnswer"]}
+
+
+            kamu adalah penulis handal yang bertugas menjawab jawaban dari agen lain, buat agar jawaban informatif namun jangan sebutkan agennya  
+            jawaban agennya sesuaikan dengan urutan agennya, berikan hanya jawabannya saja
+        """
+
+        response = chat_openai(question=prompt, model='gpt-4o-mini')
+
+        print(response)
         print('--- WRITTER AGENT ---')
-
-    
-
 
 def SSOEmailAgent(state: AgentState):
     print('--- SSO EMAIL AGENT ---')
@@ -185,16 +206,23 @@ def HybridEmailAgent(state: AgentState):
 
 def incompleteInformationAgent(state: AgentState):
 
-    print('--- INCOMPLETE INFORMATION AGENT ---')
+    prompt = f"""
+        Kamu adalah agen yang bertugas menjawab pertanyaan user yang hendak mereset password namun ada informasi yang kurang lengkap. Ikuti aturan ini:
+        - jelaskan bahwa kamu hanya menerima akun Google atau SSO Undiksha (@undiksha.ac.id atau @student.undiksha.ac.id) dan tidak untuk akun google selain itu. 
+        - Diakhir selalu selipkan kalimat seperti jika kebingungan terkait permasalahan tersebut bisa menghubungi UPA TIK (Unit Penunjang Akademik Teknologi Informasi dan Komunikasi) Undiksha. Buat agar jawaban yang kamu berikan nyambung dengan pertanyaan yang diberikan
+        Pertanyaan dari user adalah:  {state['question']}, sedangkan alasan tidak validnya karena : {state['incompleteReason']}
+    """
 
-    agent = "INCOMPLETE INFORMATION"
-    answer = state["incompleteReason"]
+    response = chat_ollama(question=prompt, model='gemma2')
+
+    agent = "ACCOUNT"
 
     agentOpinion = {
         "agent": agent,
-        "answer": answer
+        "answer": response
     }
 
+    print('--- INCOMPLETE INFORMATION AGENT ---')
     return {"agentAnswer": [agentOpinion]}
 
 
@@ -304,7 +332,7 @@ def build_graph(question):
     graph.invoke({'question': question})
     get_graph_image(graph)
 
-build_graph("siapa rektor undiksha, reset akun saya, berikan saya berita undiksha")
+build_graph("saya ingin restpassword akun pada akun sso dan siapa rektor undiksha")
 
 
 

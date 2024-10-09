@@ -1,5 +1,34 @@
 # CHATBOT SHAVIRA (GANESHA VIRTUAL ASSISTANT)
 
+## Direktori File SHAVIRA
+- `SHAVIRA UNDIKSHA/`
+  - `agents/`: Direktori untuk menyimpan fungsi tiap agent
+    - `children/`: Menampung agen-agen dibawah question identifier
+      - `sso/`: Menampung agen untuk reset akun SSO Undiksha
+        - `sso_agent`: Menangani reset password akun Undiksha
+      - `academic_agent.py`: Menangani pertanyaan terkait informasi akademis Undiksha
+      - `account_agent.py`: Menangani konteks reset akun Undiksha
+      - `general_agent.py`: Menangani pertanyaan umum terkait SHAVIRA dan Undiksha
+      - `news_agent.py`: Menangani pertanyaan terkait berita Undiksha
+      - `out_of_context_agent.py`: Menangani pertanyaan diluar konteks Undiksha dan layanan helpdesk
+      - `student_agent.py`: Menangani pertanyaan terkait kegiatan kemahasiswaan di Undiksha
+    - `__init__.py`: Inisiasi fungsi agar bisa diakses dari luar
+    - `question_identifier_agent.py`: Agen pertama untuk menentukan konteks pertanyaan user
+    - `writter_agent.py`: Agen terakhir yang memberikan output kepada user
+  - `assets/`: Berisi asset seperti untuk SHAVIRA
+    - `datasets/`: berisi dataset untuk agen-agen SHAVIRA
+    - `images/`: memuat gambar flowmap SHAVIRA
+  - `config/`: menyimpan file konfigurasi seperti prompt yang akan digunakan
+  - `graph/`: menampilkan visualisasi graf untuk satu pertanyaan
+  - `models/`: menampung model agen state yang akan digunakan pada tiap node (agen)
+  - `utils/`: menampung fungsi eksternal untuk keperluan agen
+  - `.env.example`: menyimpan file penting seperti token ChatGPT dan endpoint Ollama server
+  - `.gitignore`: Mengabaikan file krusial untuk di upload di github
+  - `app.py`: Membuat interface streamlit
+  - `main.py`: Kode utama untu menjalankan Shavira
+  - `READMW.MD`: Dokumentasi SHAVIRA
+  - `requiements.txt`: Menampung modul python yang harus diinstal ketika menjalankan shavira
+  - `tes.py`: File untuk testing kode-kode baru
 ## Ringkasan
 
 ![Roundmap Langgrap Shavira](/assets/images/SHAVIRA%20ROUNDMAP.jpg)

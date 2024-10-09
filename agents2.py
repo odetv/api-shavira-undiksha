@@ -33,8 +33,6 @@ class AgentState(TypedDict):
     agentAnswer : Annotated[Sequence[AnswerState], add]
     activeAgent : Optional[list] = None
 
-
-
 def getResponseAndContext(question: str) -> str:
     prompt = """
         Anda adalah seoarang analis pertanyaan pengguna.
@@ -83,7 +81,7 @@ def accountAgent(state: AgentState):
         - Apa jenis email yang akan direset passwordnya, jawablah sesuai pilihan dibawah:
             - "GOOGLE_EMAIL" (ketika user menyebutkan jelas bahwa akan mereset akun google, jika user hanya menyebutkan akun nya tanpa jelas memberikan pernyataan bahwa akan mereset akun GOOGLE maka alihkan ke INCOMPLETE_INFORMATION), 
             - "SSO_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk SSO Undiksha atau E-Ganesha), 
-            - "HYBRID_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha), 
+            - "HYBRID_EMAIL" (ketika dari pernyataan user jelas menyebutkan reset password untuk akun google undiksha dan SSO E-Ganesha),
             - "INCOMPLETE_INFORMATION" (ketika dari pernyataan user tidak menyebutkan apakah reset password untuk akun google undiksha atau SSO E-Ganesha)
         - Apa status login dari pertanyaan diatas, jawablah sesuai pilihan dibawah:
             - "TRUE" (Ketika user secara jelas bahwa akun undikshanya sudah diloginkan di perangkat baik hp/laptop/komputer),
@@ -186,13 +184,13 @@ def writterAgent(state: AgentState):
             Jawaban dari tiap agen: {state["agentAnswer"]}
 
 
-            kamu adalah penulis handal yang bertugas menjawab jawaban dari agen lain, buat agar jawaban informatif namun jangan sebutkan agennya  
+            adalah penulis yang bertugas menuliskan jawaban dari agen lain dari sudut pandang kamu sebagai chatbot, namun jangan sebutkan agennya  
             jawaban agennya sesuaikan dengan urutan agennya, berikan hanya jawabannya saja
         """
 
         response = chat_openai(question=prompt, model='gpt-4o-mini')
 
-        print(response)
+        print("\nRespose Dari SHAVIRA:\n", response)
         print('--- WRITTER AGENT ---')
 
 def SSOEmailAgent(state: AgentState):
@@ -224,6 +222,7 @@ def incompleteInformationAgent(state: AgentState):
 
     print('--- INCOMPLETE INFORMATION AGENT ---')
     return {"agentAnswer": [agentOpinion]}
+    
 
 
 def resetPasswordAgent(state: AgentState):
@@ -235,8 +234,8 @@ def identityVerificatorAgent(state: AgentState):
 def incompleteSSOStatment(state: AgentState):
     print("-- INCOMPLETE SSO STATEMENT --")
 
-    agent = "INCOMPLETE SSO STATEMENT"
-    answer = "ini incomplete"
+    agent = "ACCOUNT"
+    answer = "Tanyakan apakah akun undiksha tersebut sudah diloginkan di perangkatnya?"
     agentOpinion = {
         "agent": agent,
         "answer": answer
@@ -332,7 +331,7 @@ def build_graph(question):
     graph.invoke({'question': question})
     get_graph_image(graph)
 
-build_graph("saya ingin restpassword akun pada akun sso dan siapa rektor undiksha")
+build_graph("saya ingin restpassword akun pada akun sso undiksha asiapp@undiksha.ac.id dan saya sudah login diperangkat hp saya")
 
 
 

@@ -1,4 +1,3 @@
-from IPython.display import Image, display
 import os
 
 def get_graph_image(graph):

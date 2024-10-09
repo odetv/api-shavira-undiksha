@@ -5,7 +5,7 @@
   - `agents/`: Direktori untuk menyimpan fungsi tiap agent
     - `children/`: Menampung agen-agen dibawah question identifier
       - `sso/`: Menampung agen untuk reset akun SSO Undiksha
-        - `sso_agent`: Menangani reset password akun Undiksha
+        - `sso_agent.py`: Menangani reset password akun Undiksha
       - `academic_agent.py`: Menangani pertanyaan terkait informasi akademis Undiksha
       - `account_agent.py`: Menangani konteks reset akun Undiksha
       - `general_agent.py`: Menangani pertanyaan umum terkait SHAVIRA dan Undiksha

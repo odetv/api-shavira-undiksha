@@ -9,6 +9,7 @@ class AgentState(TypedDict):
     context = None
     question_type : Optional[str] = None
     question : str
+    response : Optional[str] = None
     email: Optional[str] = None
     loginStatus : Optional[str] = None
     accountType : Optional[str] = None

@@ -1,6 +1,7 @@
 from utils.llm import chat_openai
 from config.prompt import WRITTER_PROMPT
 from models import AgentState
+from utils.sort_answer_by_agent import sort_answer_by_agent
 
 class WritterAgent:
     @staticmethod
@@ -10,10 +11,24 @@ class WritterAgent:
         if len(state["agentAnswer"]) == len(state["activeAgent"]):
             print("Ini agen yang aktif", state["activeAgent"])
             print("Ini jawaban dari agen yang aktif", state["agentAnswer"])
+
+            sorted_answer = sort_answer_by_agent(state["activeAgent"], state["agentAnswer"])
+
+            print("Ini hasil setelah diurutan pertanyaannya: ", sorted_answer)
+
             response = chat_openai(
-                question=WRITTER_PROMPT.format(question=state["question"], active_agent=state["activeAgent"], agent_answer=state["agentAnswer"]), 
+                question=WRITTER_PROMPT.format(question=state["question"], sorted_answer=sorted_answer), 
                 model='gpt-4o-mini'
             )
 
+            state["response"] = response
+
             print("\nRespose Dari SHAVIRA:\n", response)
-            print('--- WRITTER AGENT ---')
+            print('--- WRITTER AGENT ---\n\n')
+
+            return state
+            
+
+        else :
+            agent = state["agentAnswer"][0]["agent"]
+            print("AGEN SUDAH SELESAI MEMBERIKAN JAWABAN: ", agent)

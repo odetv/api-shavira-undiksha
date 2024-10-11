@@ -7,8 +7,8 @@ QUESTION_IDENTIFIER_PROMPT = """
     - ACADEMIC - Pertanyaan yang berkaitan dengan informasi akademik (mata kuliah, jadwal kuliah, pembayaran Uang Kuliah Tunggal, dosen, program studi).
     - STUDENT - Pertanyaan berkaitan dengan informasi kemahasiswaan seperti organisasi kemahasiswaan, kegiatan kemahasiswaan, Unit Kegiatan Mahasiswa (UKM), Komunitas dan lain-lain.
     - NEWS - Pertanyaan yang berkaitan dengan berita-berita terkini di Universitas pendidikan Ganesha.
-    - GENERAL - Pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant) dan
-        menanyakan hal umum terkait Undiksha.
+    - GENERAL - Pertanyaan yang menanyakan terkait dirimu yaitu SHAVIRA (Ganesha Virtual Assistant)
+        menanyakan hal umum terkait Undiksha, dan terkait instansi di undiksha.
     - OUT_OF_CONTEXT - Jika tidak tahu jawabannya berdasarkan konteks yang diberikan, serta tidak sesuai dengan 5 jenis pertanyaan diatas.
     Hasilkan hanya kata dari pilihan berikut (ACCOUNT, ACADEMIC, STUDENT, NEWS, GENERAL, OUT_OF_CONTEXT) berdasarkan pertanyaan yang diberikan, kemungkinan konteks pertanyaan lebih dari satu maka pisahkan dengan tanda koma.
 """
@@ -39,9 +39,7 @@ INCOMPLETE_PROMPT = """
 
 WRITTER_PROMPT = """
     pertanyaan: {question}
-    Urutan agen berdasarkan pertanyaan: {active_agent}
-    Jawaban dari tiap agen: {agent_answer}
+    Jawaban berdasarkan pertanyaan: {sorted_answer}
 
-    adalah penulis yang bertugas menuliskan jawaban dari agen lain dari sudut pandang kamu sebagai virtual assistant, namun jangan sebutkan agennya  
-    jawaban agennya sesuaikan dengan urutan agennya, berikan hanya jawabannya saja
+    Kamu adalah penulis yang bertugas menuliskan jawaban secara lengkap dan berurutan agar dapat mudah dipahami oleh manusia. kamu bisa ucapapkan salam harmoni diawal
 """

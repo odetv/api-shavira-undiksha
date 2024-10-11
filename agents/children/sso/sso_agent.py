@@ -17,6 +17,16 @@ class SSOEmailAgent:
     def identityVerificatorAgent(state: AgentState):
         print("-- IDENTITY VERIFICATOR AGENT --")
 
+        agent = "ACCOUNT"
+        answer = "Minta untuk mengirimkan foto identitas dengan KTP"
+        agentOpinion = {
+            "agent": agent,
+            "answer": answer
+        }
+
+        print("-- IDENTITY VERIFICATOR AGENT --")
+        return {"agentAnswer": [agentOpinion]}
+
 
     @staticmethod
     def incompleteSSOStatment(state: AgentState):
@@ -30,3 +40,5 @@ class SSOEmailAgent:
         }
 
         return {"agentAnswer": [agentOpinion]}
+
+

@@ -7,13 +7,12 @@ from dotenv import load_dotenv
 from agents import *
 import os
 
-
 load_dotenv()
 
 base_url = os.getenv('BASE_URL')
 openai_api_key = os.getenv('OPENAI_API')
 
-def build_graph(question):
+def build_graph(question: str):
     workflow = StateGraph(AgentState)
     # level 1
     workflow.add_node("questionIdentifier", QuestionIdentifierAgent.questionIdentifierAgent)
@@ -38,7 +37,6 @@ def build_graph(question):
         workflow.add_node("resetPassword", SSOEmailAgent.resetPasswordAgent)
         workflow.add_node("identityVerificator", SSOEmailAgent.identityVerificatorAgent)
         workflow.add_node("incompleteSSOStatment", SSOEmailAgent.incompleteSSOStatment)
-
 
         # Define Edge
         workflow.add_edge("questionIdentifier", "account")
@@ -96,10 +94,13 @@ def build_graph(question):
     workflow.add_edge("writter", END)
 
     graph = workflow.compile()
-    graph.invoke({'question': question})
+    response = graph.invoke({'question': question})
+    print("Ini isi dari response:\n", response['response'])
     get_graph_image(graph)
 
-build_graph("saya ingin restpassword akun pada akun sso undiksha asiapp@undiksha.ac.id dan saya sudah loginkan di perangkat hp")
+    return response['response']
+
+
 
 
 

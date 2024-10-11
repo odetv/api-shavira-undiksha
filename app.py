@@ -1,50 +1,48 @@
+from openai import OpenAI
 import streamlit as st
-from langchain_community.llms import Ollama
+from dotenv import load_dotenv
+import os
+from main import build_graph
+from utils.llm import chat_ollama
 
-# Inisialisasi obrolan
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
+load_dotenv()
 
-st.title("Chat Interface seperti ChatGPT")
+openai_api_key = os.getenv('OPENAI_API')
 
-# Fungsi untuk chat dengan LLM
-
-def chat_llm(question: str, model = 'gemma2'):
-    llm = Ollama(base_url="http://119.252.174.189:11434", model=model, verbose=True)
-    result = llm.invoke(question)
-
-    return result
-
-# Fungsi untuk menambah percakapan
-def add_to_chat(user_input, bot_response):
-    st.session_state.chat_history.append({"user": user_input, "bot": bot_response})
-
-# Fungsi sederhana untuk menghasilkan balasan dari bot
-def generate_response(user_input):
-    # Ganti ini dengan fungsi bot sebenarnya atau integrasi ke model AI
-    result = chat_llm(user_input)
-
-    return result
-
-
-prompt = f"""
-
+with st.sidebar:
+    st.markdown(
     """
+    <div style="text-align: center;">
+        <img src="assets/images/icon.webp" width="100">
+        <h1>GANESHA VIRTUAL ASSISTANT</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+st.title("👩‍🦰 Shavira")
+st.caption("🚀 A Streamlit chatbot powered by OpenAI")
 
-# Kotak input pengguna
-user_input = st.text_input("Masukkan pesan:")
+# Inisialisasi session state untuk menyimpan pesan
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
 
-# Jika pengguna menekan Enter setelah mengetik pesan
-if user_input:
-    bot_response = generate_response(user_input)
-    add_to_chat(user_input, bot_response)
+# Menampilkan pesan yang sudah ada di chat
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
-# Menampilkan riwayat obrolan
-if st.session_state.chat_history:
-    for chat in st.session_state.chat_history:
-        st.write(f"**Kamu:** {chat['user']}")
-        st.write(f"**Bot:** {chat['bot']}")
-
-# Reset chat
-if st.button("Reset Chat"):
-    st.session_state.chat_history = []
+# Input dari user
+if prompt := st.chat_input():
+    client = OpenAI(api_key=openai_api_key)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+    
+    # Menampilkan spinner sebagai animasi loading
+    with st.spinner('Shavira sedang mengetik...'):
+        # response = build_graph(prompt)
+        response = chat_ollama(prompt)
+    
+    # Menyimpan pesan assistant ke dalam session state
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    # Menampilkan pesan dari assistant
+    st.chat_message("assistant").write(response)

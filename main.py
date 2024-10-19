@@ -1,7 +1,6 @@
 from langgraph.graph import END, START, StateGraph
 from utils.graph_image import get_graph_image
 from models import AgentState
-from langchain_community.llms import Ollama
 from config.prompt import *
 from dotenv import load_dotenv
 from agents import *
@@ -99,6 +98,8 @@ def build_graph(question: str):
     get_graph_image(graph)
 
     return response['response']
+
+build_graph("siapa rektor undiksha")
 
 
 

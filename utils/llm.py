@@ -1,7 +1,7 @@
-from langchain_community.llms import Ollama
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+from langchain_ollama import OllamaLLM
 
 # Memuat file .env
 load_dotenv()
@@ -11,7 +11,7 @@ openai_api_key = os.getenv('OPENAI_API')
 
 def chat_ollama(question: str, model = 'gemma2'):
     try:
-        ollama = Ollama(base_url=base_url, model=model, verbose=True)
+        ollama = OllamaLLM(base_url=base_url, model=model, verbose=True)
         result = ollama.invoke(question)
 
         return result

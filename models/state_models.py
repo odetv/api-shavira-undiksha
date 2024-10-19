@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal, Optional, Annotated, Sequence
+from typing_extensions import TypedDict, Literal, Optional, Annotated, Sequence
 from operator import add
 
 class AnswerState(TypedDict):

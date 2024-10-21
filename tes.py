@@ -1,16 +1,30 @@
-import networkx as nx
-import matplotlib.pyplot as plt
+import requests
+from bs4 import BeautifulSoup
+import time
 
-# Membuat graph baru
-G = nx.Graph()
+def scrape_with_beautifulsoup(url):
+    # Kirim permintaan HTTP ke halaman web
+    response = requests.get(url)
 
-# Menambahkan edge atau hubungan antara simpul (nodes)
-G.add_edge('A', 'B')
-G.add_edge('B', 'C')
-G.add_edge('C', 'D')
-G.add_edge('D', 'A')
+    # Periksa apakah permintaan berhasil (status code 200)
 
-# Menampilkan graph
-pos = nx.spring_layout(G)
-nx.draw(G, pos, with_labels=True, node_size=2000, node_color='skyblue', font_size=10, font_color='black')
-plt.show()
+    # Parsing halaman HTML menggunakan BeautifulSoup
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    # Ambil judul halaman
+    title = soup.title.string
+
+    # Ambil contoh elemen lain, misalnya semua paragraf <p>
+    paragraphs = soup.find_all('p')
+
+    # Cetak judul halaman
+    print(f"Title: {title}")
+
+    # Cetak semua paragraf (atau bisa diproses lebih lanjut)
+    for i, p in enumerate(paragraphs, 1):
+        print(f"Paragraph {i}: {p.get_text()}")
+
+
+# Penggunaan fungsi
+url = "https://ojs.unud.ac.id/index.php/EEB"  # Ganti dengan URL yang ingin di-scrape
+scrape_with_beautifulsoup(url)

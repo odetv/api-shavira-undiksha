@@ -3,7 +3,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import os
 from main import build_graph
-from utils.llm import chat_ollama
+from utils.llm import *
 
 load_dotenv()
 
@@ -38,8 +38,8 @@ if prompt := st.chat_input():
     
     # Menampilkan spinner sebagai animasi loading
     with st.spinner('Shavira sedang mengetik...'):
-        # response = build_graph(prompt)
-        response = chat_ollama(prompt)
+        response = build_graph(prompt)
+        # response = chat_groq(prompt)
     
     # Menyimpan pesan assistant ke dalam session state
     st.session_state.messages.append({"role": "assistant", "content": response})

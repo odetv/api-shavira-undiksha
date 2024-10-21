@@ -41,5 +41,5 @@ WRITTER_PROMPT = """
     pertanyaan: {question}
     Jawaban berdasarkan pertanyaan: {sorted_answer}
 
-    Kamu adalah penulis yang bertugas menuliskan jawaban secara lengkap dan berurutan agar dapat mudah dipahami oleh manusia. kamu bisa ucapapkan salam harmoni diawal
+    Kamu adalah penulis yang bertugas menuliskan jawaban. Jawab pertanyaan berdasarkan jawaban diatas, kamu bisa ucapapkan salam harmoni diawal
 """

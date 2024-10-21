@@ -59,7 +59,15 @@ class AccountAgent:
     
     @staticmethod
     def SSOEmailAgent(state: AgentState):
+        agent = "ACCOUNT"
+
+        agentOpinion = {
+            "agent": agent,
+            "answer": "Email telah direset silahkan akses email undiksha melalui gmail"
+        }
+
         print('--- SSO EMAIL AGENT ---')
+
 
     @staticmethod
     def GoogleEmailAgent(state: AgentState):

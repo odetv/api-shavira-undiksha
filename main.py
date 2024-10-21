@@ -14,17 +14,19 @@ openai_api_key = os.getenv('OPENAI_API')
 def build_graph(question: str):
     workflow = StateGraph(AgentState)
     # level 1
-    workflow.add_node("questionIdentifier", QuestionIdentifierAgent.questionIdentifierAgent)
+    initial_state = QuestionIdentifierAgent.questionIdentifierAgent({"question": question})
+
+    context = initial_state["activeAgent"]
+    
+    workflow.add_node("questionIdentifier",  lambda state: initial_state)
     workflow.add_node("writter", WritterAgent.writterAgent)
     workflow.add_edge(START, "questionIdentifier")
 
     # Apakah workflow bisa dilempar ke fungsi lain???
 
-    _, context = QuestionIdentifierAgent.getResponseAndContext(question)
-
     if 'account' in context:
         # Level 2
-        workflow.add_node("account", AccountAgent.accountAgent)
+        workflow.add_node("account",  AccountAgent.accountAgent)
 
         # level 3
         workflow.add_node("SSOEmail", AccountAgent.SSOEmailAgent)
@@ -94,12 +96,11 @@ def build_graph(question: str):
 
     graph = workflow.compile()
     response = graph.invoke({'question': question})
-    print("Ini isi dari response:\n", response['response'])
     get_graph_image(graph)
 
     return response['response']
 
-build_graph("siapa rektor undiksha")
+build_graph("reset akun SSO sudiartika@undiksha.ac.id dan sudah saya loginkan di perangkat hp dan siapa rektor undiksha")
 
 
 

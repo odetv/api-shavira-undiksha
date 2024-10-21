@@ -1,4 +1,4 @@
-from utils.llm import chat_openai
+from utils.llm import *
 from config.prompt import WRITTER_PROMPT
 from models import AgentState
 from utils.sort_answer_by_agent import sort_answer_by_agent
@@ -20,6 +20,10 @@ class WritterAgent:
                 question=WRITTER_PROMPT.format(question=state["question"], sorted_answer=sorted_answer), 
                 model='gpt-4o-mini'
             )
+
+            # response = chat_groq(
+            #     question=WRITTER_PROMPT.format(question=state["question"], sorted_answer=sorted_answer), 
+            # )
 
             state["response"] = response
 

@@ -1,30 +1,25 @@
 import re
-from utils.llm import chat_ollama
+from utils.llm import chat_ollama, chat_groq
 from config.prompt import QUESTION_IDENTIFIER_PROMPT
 from models import AgentState
 from langchain_core.messages import HumanMessage, SystemMessage
 
 class QuestionIdentifierAgent:
     @staticmethod
-    def getResponseAndContext(question: str) -> str:
+    def questionIdentifierAgent(state: AgentState) :
         messages = [
             SystemMessage(content=QUESTION_IDENTIFIER_PROMPT),
-            HumanMessage(content=question),
+            HumanMessage(content=state["question"]),
         ]
 
-        response = chat_ollama(messages)
+        response = chat_groq(messages)
 
         fixed_response = response.strip().lower()
 
-        result = re.findall(r'\b\w+\b', fixed_response)
+        activeAgents = re.findall(r'\b\w+\b', fixed_response)
 
-        return response, result
-
-    @staticmethod
-    def questionIdentifierAgent(state: AgentState) :
-        response, this_context = QuestionIdentifierAgent.getResponseAndContext(state['question'])
         print(state["question"])
-        print(this_context)
+        print(activeAgents)
 
         print('--- QUESTION IDENTIFIER AGENT ---\n\n')
-        return {"question_type": response, "activeAgent": this_context}
+        return {"question_type": response, "activeAgent": activeAgents}

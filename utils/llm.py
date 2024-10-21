@@ -1,4 +1,5 @@
 from openai import OpenAI
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 from langchain_ollama import OllamaLLM
@@ -36,3 +37,11 @@ def chat_openai(question: str, model = 'gpt-3.5-turbo-0125'):
     except:
         print("Ada masalah dengan GPT")
 
+def chat_groq(question: str):
+    groq = ChatGroq(
+        model="gemma2-9b-it",
+        max_tokens=None,
+        timeout=None,
+    )
+    result = groq.invoke(question).content if hasattr(groq.invoke(question), "content") else groq.invoke(question)
+    return result

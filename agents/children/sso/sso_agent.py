@@ -5,7 +5,7 @@ class SSOEmailAgent:
     def resetPasswordAgent(state: AgentState):
         print("-- RESET PASSWORD AGENT --")
         agent = "ACCOUNT"
-        answer = "Proses reset password ..."
+        answer = "Proses reset password berhasil, silahkan cek email anda dan klik link reset passwordnya"
         agentOpinion = {
             "agent": agent,
             "answer": answer

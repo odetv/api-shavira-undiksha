@@ -1,3 +1,4 @@
 .env
 __pycache__
 shavira-env/
+faiss_db/

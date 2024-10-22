@@ -100,7 +100,7 @@ def build_graph(question: str):
 
     return response['response']
 
-build_graph("berapa umurmu")
+build_graph("siapa rektor undiksha dan bagaimana saya melihat ukt")
 
 
 

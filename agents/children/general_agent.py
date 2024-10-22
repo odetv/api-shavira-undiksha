@@ -1,12 +1,12 @@
 from models import AgentState
 from utils.llm import chat_groq
 from config.prompt import GENERAL_AGENT_PROMPT
+from chain import general_chain
 
 class GeneralAgent:
     @staticmethod
     def generalAgent(state: AgentState):
-        prompt = GENERAL_AGENT_PROMPT.format(question=state["question"])
-        answer = chat_groq(prompt)
+        answer = general_chain(state["question"])
         agent = "GENERAL"
 
         agentOpinion = {

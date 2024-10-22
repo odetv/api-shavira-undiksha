@@ -100,7 +100,7 @@ def build_graph(question: str):
 
     return response['response']
 
-build_graph("reset akun SSO sudiartika@undiksha.ac.id dan sudah saya loginkan di perangkat hp dan siapa rektor undiksha")
+build_graph("berapa umurmu")
 
 
 

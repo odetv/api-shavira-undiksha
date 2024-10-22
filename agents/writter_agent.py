@@ -31,7 +31,6 @@ class WritterAgent:
             print('--- WRITTER AGENT ---\n\n')
 
             return state
-            
 
         else :
             agent = state["agentAnswer"][0]["agent"]

@@ -104,7 +104,7 @@ def build_graph(question: str):
     return response['response']
 
 
-build_graph("siapa dekan fe undiksha")
+build_graph("dekan FTK")
 
 
 

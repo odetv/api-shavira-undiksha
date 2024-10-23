@@ -5,11 +5,11 @@ def get_graph_image(graph):
     img_data = graph.get_graph().draw_mermaid_png()
 
     # Cek apakah folder graph ada
-    if not os.path.exists('graph'):
-        os.makedirs('graph')
+    if not os.path.exists('src/graph'):
+        os.makedirs('src/graph')
 
     # Menentukan nama file dan path folder tempat menyimpan gambar
-    file_path = 'graph/shavira_graph.png'
+    file_path = 'src/graph/shavira_graph.png'
 
     # Menyimpan gambar dalam format PNG ke folder yang diinginkan
     with open(file_path, 'wb') as file:

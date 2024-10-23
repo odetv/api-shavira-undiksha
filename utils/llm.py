@@ -6,8 +6,8 @@ from langchain_ollama import OllamaLLM
 
 # Memuat file .env
 load_dotenv()
-base_url = os.getenv('BASE_URL')
-openai_api_key = os.getenv('OPENAI_API')
+base_url = os.getenv('OLLAMA_BASE_URL')
+openai_api_key = os.getenv('OPENAI_API_KEY')
 
 
 def chat_ollama(question: str, model = 'gemma2'):

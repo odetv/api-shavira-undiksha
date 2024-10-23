@@ -1,7 +1,7 @@
-from models import AgentState
+from src.models import AgentState
 from utils.llm import chat_groq
-from config.prompt import GENERAL_AGENT_PROMPT
-from chain import general_chain
+from src.config.prompt import GENERAL_AGENT_PROMPT
+from src.chain import general_chain
 
 class GeneralAgent:
     @staticmethod

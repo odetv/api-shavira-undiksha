@@ -3,12 +3,15 @@ import pdfplumber
 import streamlit as st
 from dotenv import load_dotenv
 import os
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from main import build_graph
 from utils.llm import *
 
 load_dotenv()
 
-openai_api_key = os.getenv('OPENAI_API')
+openai_api_key = os.getenv('OPENAI_API_KEY')
 with st.sidebar:
     st.markdown(
     """

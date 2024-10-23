@@ -14,30 +14,30 @@ from config.prompt import GENERAL_AGENT_PROMPT
 
 def general_chain(query: str):
     # 1. Load PDF Document
-    loader = PyPDFDirectoryLoader("assets/datasets/GENERAL")
+    loader = PyPDFDirectoryLoader("src/datasets/general")
     docs = loader.load()
 
     # Split dokumen
     text_splitter = RecursiveCharacterTextSplitter(
         separators=[" "],
         chunk_size=900, 
-        chunk_overlap=500
+        chunk_overlap=100
     )
     splits = text_splitter.split_documents(docs)
 
     embeddings = OpenAIEmbeddings()
-    if not os.path.exists("database"):
-        os.makedirs("database")
+    if not os.path.exists("src/database"):
+        os.makedirs("src/database")
 
     # Simpan ke FAISS
-    if not os.path.exists("database/faiss_db"):
+    if not os.path.exists("src/database/general"):
         vectorstore = FAISS.from_documents(splits, embeddings)
 
         # Simpan vectorstore ke disk (opsional tapi direkomendasikan)
-        vectorstore.save_local("database/faiss_db")
+        vectorstore.save_local("src/database/general")
 
     # Cari dengan FAISS
-    db = FAISS.load_local("database/faiss_db", embeddings, allow_dangerous_deserialization=True)
+    db = FAISS.load_local("src/database/general", embeddings, allow_dangerous_deserialization=True)
     response = db.similarity_search_with_relevance_scores(query, k=5)
     # for doc, similarity in response:
     #     print(f"Content: {doc.page_content}")

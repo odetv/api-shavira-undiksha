@@ -1,4 +1,4 @@
-from models import AgentState
+from src.models import AgentState
 
 class SSOEmailAgent:
     @staticmethod

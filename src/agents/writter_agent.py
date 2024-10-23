@@ -1,6 +1,6 @@
 from utils.llm import *
-from config.prompt import WRITTER_PROMPT
-from models import AgentState
+from src.config.prompt import WRITTER_PROMPT
+from src.models import AgentState
 from utils.sort_answer_by_agent import sort_answer_by_agent
 
 class WritterAgent:

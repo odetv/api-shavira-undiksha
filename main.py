@@ -1,14 +1,14 @@
 from langgraph.graph import END, START, StateGraph
-from utils.graph_image import get_graph_image
-from models import AgentState
-from config.prompt import *
+from utils.create_graph_image import get_graph_image
+from src.models import AgentState
+from src.config.prompt import *
 from dotenv import load_dotenv
-from agents import *
+from src.agents import *
 import os
 
 load_dotenv()
 
-base_url = os.getenv('BASE_URL')
+base_url = os.getenv('OLLAMA_BASE_URL')
 openai_api_key = os.getenv('OPENAI_API')
 
 def build_graph(question: str):
@@ -103,6 +103,8 @@ def build_graph(question: str):
 
     return response['response']
 
+
+build_graph("siapa dekan fe undiksha")
 
 
 

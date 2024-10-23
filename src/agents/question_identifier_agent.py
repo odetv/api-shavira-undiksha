@@ -1,7 +1,7 @@
 import re
 from utils.llm import chat_ollama, chat_groq, chat_openai
-from config.prompt import QUESTION_IDENTIFIER_PROMPT
-from models import AgentState
+from src.config.prompt import QUESTION_IDENTIFIER_PROMPT
+from src.models import AgentState
 from langchain_core.messages import HumanMessage, SystemMessage
 
 class QuestionIdentifierAgent:

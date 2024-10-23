@@ -29,6 +29,7 @@ def build_graph(question: str):
         workflow.add_node("account",  AccountAgent.accountAgent)
 
         # level 3
+        workflow.add_node("accountInfo", AccountAgent.accountInfo)
         workflow.add_node("SSOEmail", AccountAgent.SSOEmailAgent)
         workflow.add_node("UndikshaGoogleEmail", AccountAgent.GoogleEmailAgent)
         workflow.add_node("HybridEmail", AccountAgent.HybridEmailAgent)
@@ -53,6 +54,7 @@ def build_graph(question: str):
             }
         )
 
+        workflow.add_edge("accountInfo", "writter")
         workflow.add_edge("UndikshaGoogleEmail", "writter")
         workflow.add_edge("HybridEmail", "writter")
         workflow.add_edge("incompleteInformation", "writter")
@@ -60,6 +62,7 @@ def build_graph(question: str):
         workflow.add_conditional_edges(
             'account',
             AccountAgent.routeToSpecificEmailAgent, {
+                'ACCOUNT_INFO': 'accountInfo',
                 'SSO_EMAIL': 'SSOEmail',
                 'GOOGLE_EMAIL': 'UndikshaGoogleEmail',
                 'HYBRID_EMAIL': 'HybridEmail',
@@ -100,7 +103,7 @@ def build_graph(question: str):
 
     return response['response']
 
-build_graph("siapa rektor undiksha dan bagaimana saya melihat ukt")
+
 
 
 

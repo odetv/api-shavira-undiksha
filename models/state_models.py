@@ -14,6 +14,6 @@ class AgentState(TypedDict):
     loginStatus : Optional[str] = None
     accountType : Optional[str] = None
     incompleteReason : Optional[str] = None
-    resetPasswordType : Optional[str] = None
+    accountAgentType : Optional[str] = None
     agentAnswer : Annotated[Sequence[AnswerState], add]
     activeAgent : Optional[list] = None

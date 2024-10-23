@@ -20,28 +20,34 @@ def chat_ollama(question: str, model = 'gemma2'):
     except:
         print("Ada masalah di server OLLAMA")
 
-def chat_openai(question: str, model = 'gpt-3.5-turbo-0125'):
+def chat_openai(question: str, system_prompt: str, model = 'gpt-3.5-turbo-0125'):
     try:
-        gpt_openai = OpenAI(api_key=openai_api_key)
-        result = gpt_openai.chat.completions.create(
+        client = OpenAI()
+        completion = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "user", "content": question}
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": question
+                }
             ],
-            temperature=0.7,
-            max_tokens=200
+            temperature=0.0
         )
-        
-        return result.choices[0].message.content 
+
+        return completion.choices[0].message.content
     
-    except:
+    except Exception as e:
         print("Ada masalah dengan GPT")
+        print("Ini errornya: ", e)
 
 def chat_groq(question: str):
     groq = ChatGroq(
-        model="gemma2-9b-it",
+        model="gemma-7b-it",
         max_tokens=None,
         timeout=None,
+        temperature=0.1,
     )
     result = groq.invoke(question).content if hasattr(groq.invoke(question), "content") else groq.invoke(question)
     return result
+

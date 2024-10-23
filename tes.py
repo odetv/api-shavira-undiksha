@@ -1,4 +1,9 @@
-from chain.general_chain import general_chain
+from chain import general_chain
+from utils.llm import chat_groq
 
-response = general_chain("siapa wakil pejabat undiksha")
-print(response)
+
+response = general_chain("Fakultas tenik dan kujujuran")
+
+
+
+

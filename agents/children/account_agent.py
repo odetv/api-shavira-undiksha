@@ -1,6 +1,6 @@
 from models import AgentState
-from utils.llm import chat_openai, chat_ollama
-from config.prompt import ACCOUNT_PROMPT, INCOMPLETE_PROMPT
+from utils.llm import chat_openai, chat_ollama, chat_groq
+from config.prompt import ACCOUNT_PROMPT, INCOMPLETE_PROMPT, ACCOUNT_INFO_PROMPT
 import json
 
 class AccountAgent:
@@ -12,6 +12,8 @@ class AccountAgent:
 
         result = [item.strip() for item in response.split(",")]
 
+        print(response)
+
         try:    
             email = result[0]
             emailType = result[1]
@@ -22,28 +24,32 @@ class AccountAgent:
             validUndikshaEmail = email and (email.endswith("@undiksha.ac.id") or email.endswith("@student.undiksha.ac.id"))
             reason = None
 
-            if "null" not in email: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
+            
+            if "null" not in email and "ACCOUNT_INFO" not in emailType: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
                 if validUndikshaEmail:
                     if emailType == 'SSO_EMAIL':
-                        resetPasswordType = "SSO_EMAIL"
+                        accountAgentType = "SSO_EMAIL"
                     elif emailType == 'GOOGLE_EMAIL':
-                        resetPasswordType = "GOOGLE_EMAIL"
+                        accountAgentType = "GOOGLE_EMAIL"
                     elif emailType == 'HYBRID_EMAIL':
-                        resetPasswordType = "HYBRID_EMAIL"
+                        accountAgentType = "HYBRID_EMAIL"
                     else:
-                        resetPasswordType = "INCOMPLETE_INFORMATION"
+                        accountAgentType = "INCOMPLETE_INFORMATION"
                         reason = "Tidak disebutkan apakah user ingin reset password Akun google Undiksha atau SSO E-Ganesha"
                 else:
-                    resetPasswordType = "INCOMPLETE_INFORMATION"
+                    accountAgentType = "INCOMPLETE_INFORMATION"
                     reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
                     
             else:
-                resetPasswordType = "INCOMPLETE_INFORMATION"
-                reason = 'user tidak menyebutkan alamat email'
+                if "ACCOUNT_INFO" in emailType:
+                    accountAgentType = "ACCOUNT_INFO"
+                else:
+                    accountAgentType = "INCOMPLETE_INFORMATION"
+                    reason = 'user tidak menyebutkan alamat email'
                 
             print(f"Alasan incomplete: {reason}")
             print('--- ACCOUNT AGENT ---\n\n')
-            return {"resetPasswordType": resetPasswordType, "incompleteReason": reason, "loginStatus": loginStatus}
+            return {"accountAgentType": accountAgentType, "incompleteReason": reason, "loginStatus": loginStatus}
 
         except json.JSONDecodeError as e:
             # Handle the case where the response is not valid JSON
@@ -51,12 +57,28 @@ class AccountAgent:
             
     @staticmethod
     def routeToSpecificEmailAgent(state: AgentState):
-        return state['resetPasswordType']
+        return state['accountAgentType']
 
     @staticmethod
     def checkEmailWaslogged(state: AgentState):
         return state['loginStatus']
     
+    @staticmethod
+    def accountInfo(state: AgentState):
+        prompt = ACCOUNT_INFO_PROMPT.format(question=state['question'])
+
+        response = chat_groq(prompt)
+
+        agent = "ACCOUNT"
+
+        agentOpinion = {
+            "agent": agent,
+            "answer": response
+        }
+
+        print(f"--- {agent} INFO AGENT ---")
+        return {"agentAnswer": [agentOpinion]}
+
     @staticmethod
     def SSOEmailAgent(state: AgentState):
         agent = "ACCOUNT"
@@ -79,9 +101,8 @@ class AccountAgent:
 
     @staticmethod
     def incompleteInformationAgent(state: AgentState):
-        response = chat_ollama(
+        response = chat_groq(
             question=INCOMPLETE_PROMPT.format(question=state['question'], reason=state['incompleteReason']), 
-            model='gemma2'
         )
 
         agent = "ACCOUNT"

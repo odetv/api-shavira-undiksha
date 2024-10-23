@@ -18,7 +18,8 @@ class WritterAgent:
 
             response = chat_openai(
                 question=WRITTER_PROMPT.format(question=state["question"], sorted_answer=sorted_answer), 
-                model='gpt-4o-mini'
+                system_prompt="kamu adalah penulis",
+                model='gpt-4o-mini',
             )
 
             # response = chat_groq(
@@ -32,6 +33,4 @@ class WritterAgent:
 
             return state
 
-        else :
-            agent = state["agentAnswer"][0]["agent"]
-            print("AGEN SUDAH SELESAI MEMBERIKAN JAWABAN: ", agent)
+        

@@ -9,25 +9,6 @@ from utils.llm import *
 load_dotenv()
 
 openai_api_key = os.getenv('OPENAI_API')
-with pdfplumber.open("assets/datasets/Umum.pdf") as pdf:
-    text = ""
-    for page in pdf.pages:
-        text += page.extract_text()
-
-def try_encodings(text):
-    encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
-    for encoding in encodings:
-        try:
-            return text.encode(encoding).decode('utf-8')
-        except:
-            continue
-    return text
-
-text = try_encodings(text)  
-
-
-
-
 with st.sidebar:
     st.markdown(
     """

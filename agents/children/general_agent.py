@@ -6,7 +6,8 @@ from chain import general_chain
 class GeneralAgent:
     @staticmethod
     def generalAgent(state: AgentState):
-        answer = general_chain(state["question"])
+        question = state["question"]
+        answer = general_chain(question)
         agent = "GENERAL"
 
         agentOpinion = {

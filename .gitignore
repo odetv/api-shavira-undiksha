@@ -1,2 +1,8 @@
-.env
 __pycache__
+venv
+shavira-env
+venv-shavira
+eval/.deepeval
+eval/.deepeval-cache.json
+*.json
+.env

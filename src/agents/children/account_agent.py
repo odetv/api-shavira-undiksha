@@ -1,14 +1,20 @@
 from src.models import AgentState
 from utils.llm import chat_openai, chat_ollama, chat_groq
-from src.config.prompt import ACCOUNT_PROMPT, INCOMPLETE_PROMPT, ACCOUNT_INFO_PROMPT
+from langchain_core.messages import HumanMessage, SystemMessage
+from src.configs.prompt import ACCOUNT_PROMPT, INCOMPLETEACCOUNT_PROMPT, ACCOUNTHELP_PROMPT
 import json
+
 
 class AccountAgent:
     @staticmethod
     def accountAgent(state: AgentState):
         message = ACCOUNT_PROMPT.format(question=state['question'])
 
-        response = chat_openai(question=message, model='gpt-4o-mini')
+        messages = [
+            HumanMessage(content=message)
+        ]
+
+        response = chat_openai(messages)
 
         result = [item.strip() for item in response.split(",")]
 
@@ -25,26 +31,26 @@ class AccountAgent:
             reason = None
 
             
-            if "null" not in email and "ACCOUNT_INFO" not in emailType: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
+            if "null" not in email and "ACCOUNTHELP_AGENT" not in emailType: # Cek apakah email dan emailType bukan INCOMPLETE INFORMATION atau tidak None
                 if validUndikshaEmail:
-                    if emailType == 'SSO_EMAIL':
-                        accountAgentType = "SSO_EMAIL"
-                    elif emailType == 'GOOGLE_EMAIL':
-                        accountAgentType = "GOOGLE_EMAIL"
-                    elif emailType == 'HYBRID_EMAIL':
-                        accountAgentType = "HYBRID_EMAIL"
+                    if emailType == 'SSOEMAIL_AGENT':
+                        accountAgentType = "SSOEMAIL_AGENT"
+                    elif emailType == 'GOOGLEEMAIL_AGENT':
+                        accountAgentType = "GOOGLEEMAIL_AGENT"
+                    elif emailType == 'HYBRIDEMAIL_AGENT':
+                        accountAgentType = "HYBRIDEMAIL_AGENT"
                     else:
-                        accountAgentType = "INCOMPLETE_INFORMATION"
+                        accountAgentType = "INCOMPLETEINFORMATION_AGENT"
                         reason = "Tidak disebutkan apakah user ingin reset password Akun google Undiksha atau SSO E-Ganesha"
                 else:
-                    accountAgentType = "INCOMPLETE_INFORMATION"
+                    accountAgentType = "INCOMPLETEINFORMATION_AGENT"
                     reason = 'Email yang diinputkan bukan email undiksha, mohon gunakan email undiksha dengan domain @undiksha.ac.id atau @student.undiksha.ac.id'
                     
             else:
-                if "ACCOUNT_INFO" in emailType:
-                    accountAgentType = "ACCOUNT_INFO"
+                if "ACCOUNTHELP_AGENT" in emailType:
+                    accountAgentType = "ACCOUNTHELP_AGENT"
                 else:
-                    accountAgentType = "INCOMPLETE_INFORMATION"
+                    accountAgentType = "INCOMPLETEINFORMATION_AGENT"
                     reason = 'user tidak menyebutkan alamat email'
                 
             print(f"Alasan incomplete: {reason}")
@@ -64,12 +70,16 @@ class AccountAgent:
         return state['loginStatus']
     
     @staticmethod
-    def accountInfo(state: AgentState):
-        prompt = ACCOUNT_INFO_PROMPT.format(question=state['question'])
+    def accountHelp(state: AgentState):
+        prompt = ACCOUNTHELP_PROMPT.format(question=state['question'])
 
-        response = chat_groq(prompt)
+        messages = [
+            HumanMessage(content=prompt)
+        ]
 
-        agent = "ACCOUNT"
+        response = chat_openai(messages)
+
+        agent = "ACCOUNT_AGENT"
 
         agentOpinion = {
             "agent": agent,
@@ -81,7 +91,7 @@ class AccountAgent:
 
     @staticmethod
     def SSOEmailAgent(state: AgentState):
-        agent = "ACCOUNT"
+        agent = "ACCOUNT_AGENT"
 
         agentOpinion = {
             "agent": agent,
@@ -101,11 +111,13 @@ class AccountAgent:
 
     @staticmethod
     def incompleteInformationAgent(state: AgentState):
-        response = chat_groq(
-            question=INCOMPLETE_PROMPT.format(question=state['question'], reason=state['incompleteReason']), 
-        )
+        question=INCOMPLETEACCOUNT_PROMPT.format(question=state['question'], reason=state['incompleteReason'])
+        messages = [
+            HumanMessage(content=question)
+        ]
+        response = chat_openai(messages)
 
-        agent = "ACCOUNT"
+        agent = "ACCOUNT_AGENT"
 
         agentOpinion = {
             "agent": agent,

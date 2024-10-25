@@ -1,52 +1,37 @@
-from openai import OpenAI
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 from langchain_ollama import OllamaLLM
 
-# Memuat file .env
+
 load_dotenv()
-base_url = os.getenv('OLLAMA_BASE_URL')
+ollama_base_url = os.getenv('OLLAMA_BASE_URL')
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
 
-def chat_ollama(question: str, model = 'gemma2'):
-    try:
-        ollama = OllamaLLM(base_url=base_url, model=model, verbose=True)
-        result = ollama.invoke(question)
+def chat_ollama(question: str, model = "gemma2"):
+    ollama = OllamaLLM(base_url=ollama_base_url, model=model, verbose=True)
+    result = ollama.invoke(question)
+    return result
 
-        return result
-    
-    except:
-        print("Ada masalah di server OLLAMA")
 
-def chat_openai(question: str, system_prompt: str, model = 'gpt-3.5-turbo-0125'):
-    try:
-        client = OpenAI()
-        completion = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {
-                    "role": "user",
-                    "content": question
-                }
-            ],
-            temperature=0.0
-        )
+def chat_openai(question: str):
+    openai = ChatOpenAI(api_key=openai_api_key, model="gpt-4o-mini", temperature=0, streaming=True)
+    result = ""
+    stream_response = openai.stream(question)
+    for chunk in stream_response:
+        token = chunk.content
+        result += token
+        print(token, end="", flush=True)
+    return result
 
-        return completion.choices[0].message.content
-    
-    except Exception as e:
-        print("Ada masalah dengan GPT")
-        print("Ini errornya: ", e)
 
 def chat_groq(question: str):
     groq = ChatGroq(
-        model="gemma-7b-it",
+        model="gemma2-9b-it",
         max_tokens=None,
         timeout=None,
-        temperature=0.1,
     )
     result = groq.invoke(question).content if hasattr(groq.invoke(question), "content") else groq.invoke(question)
     return result

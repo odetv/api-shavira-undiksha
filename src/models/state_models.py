@@ -17,3 +17,14 @@ class AgentState(TypedDict):
     accountAgentType : Optional[str] = None
     agentAnswer : Annotated[Sequence[AnswerState], add]
     activeAgent : Optional[list] = None
+    checkKelulusan: str
+    noPendaftaran: str
+    tglLahirPendaftar: str
+    responseIncompleteInfoKelulusan: str
+    responseKelulusan: str
+    checkKTM: str
+    idNIMMhs: str
+    urlKTMMhs: str
+    responseIncompleteNim: str
+    responseKTM: str
+

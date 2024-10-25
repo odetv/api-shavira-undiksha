@@ -1,6 +1,22 @@
-langgraph
-langchain-community
-langchain-core
-ollama
+# Run before pip install -r requirements.txt
+# pip install virtualenv
+# python -m venv venv
+# venv/Scripts/activate         # On Windows
+# source venv/bin/activate    # On macOS/Linux
+
+requests
 python-dotenv
+langchain
+langgraph
+langchain-core
+langchain-openai
+langchain-ollama
+langchain-groq
+langchain-community
+pytest
 typing-extensions
+faiss-cpu==1.8.0
+groq
+pdfplumber
+streamlit
+pandas

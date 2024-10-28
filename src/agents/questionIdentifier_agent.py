@@ -12,19 +12,16 @@ class QuestionIdentifierAgent:
         original_question = state['question']
         expanded_question = expand_abbreviations(original_question, ABBREVIATIONS)
         state['question'] = expanded_question
-        messages = [
-            SystemMessage(content=QUESTIONIDENTIFIER_PROMPT),
-            HumanMessage(content=state["question"]),
-        ]
-        response = chat_openai(messages)
-        fixed_response = response.strip().lower()
-        activeAgents = re.findall(r'\b\w+\b', fixed_response)
+        
+        response = chat_openai(state['question'], QUESTIONIDENTIFIER_PROMPT)
+        matches = re.findall(r'(\w+): "([^"]+)"', response)
+        result = dict(matches)
 
         # print("Original Question:", original_question)
         # print("Expanded Question:", expanded_question)
 
         print(state["question"])
-        print(activeAgents)
+        print(matches)
 
         print('--- QUESTION IDENTIFIER AGENT ---\n\n')
         return {"question_type": response, "activeAgent": activeAgents}

@@ -17,13 +17,9 @@ class ResultWriterAgent:
 
             print("Ini hasil setelah diurutan pertanyaannya: ", sorted_answer)
 
-            question=RESULTWRITER_PROMPT.format(question=state["question"], sorted_answer=sorted_answer)
+            message = f"Pertanyaan: {state['question']} Jawaban berdasarkan pertanyaan: {sorted_answer}"
 
-            messages = [
-                HumanMessage(question)
-            ]
-
-            response = chat_openai(messages)
+            response = chat_openai(message, RESULTWRITER_PROMPT)
 
             # response = chat_groq(
             #     question=RESULTWRITER_PROMPT.format(question=state["question"], sorted_answer=sorted_answer), 

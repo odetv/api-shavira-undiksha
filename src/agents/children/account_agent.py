@@ -108,11 +108,11 @@ class AccountAgent:
 
     @staticmethod
     def incompleteInformationAgent(state: AgentState):
-        question=INCOMPLETEACCOUNT_PROMPT.format(question=state['question'], reason=state['incompleteReason'])
-        messages = [
-            HumanMessage(content=question)
-        ]
-        response = chat_openai(messages)
+        question = state["initiated_agents"]['ACCOUNT_AGENT']
+        reason = state['incompleteReason']
+        message = f"Pertanyaan dari user adalah:  {question}, sedangkan alasan tidak validnya karena : {reason}"
+        
+        response = chat_openai(message, INCOMPLETEACCOUNT_PROMPT)
 
         agent = "ACCOUNT_AGENT"
 

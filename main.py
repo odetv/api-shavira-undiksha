@@ -53,16 +53,6 @@ def build_graph(question: str):
             }
         )
 
-    if "ACADEMIC_AGENT" in context:
-        workflow.add_node("academic_agent", AcademicAgent.academicAgent)
-        workflow.add_edge("questionIdentifier_agent", "academic_agent")
-        workflow.add_edge("academic_agent", "resultWriter_agent")
-
-    if "STUDENT_AGENT" in context:
-        workflow.add_node("student_agent", StudentAgent.studentAgent)
-        workflow.add_edge("questionIdentifier_agent", "student_agent")
-        workflow.add_edge("student_agent", "resultWriter_agent")
-
     if "NEWS_AGENT" in context:
         workflow.add_node("news_agent", NewsAgent.newsAgent)
         workflow.add_edge("questionIdentifier_agent", "news_agent")
@@ -123,6 +113,6 @@ def build_graph(question: str):
 
     return response["response"]
 
-build_graph("saya ingin reset password undiksha dan siapa rektor undiksha")
+build_graph("berapa NIP I Ketut resika arthana")
 # DEBUG QUERY EXAMPLES
 # build_graph("Siapa rektor undiksha? Bagaimana akademik undiksha? Bagaimana mahasiswa undiksha? apa berita terbaru undiksha? Saya ingin reset password sso undiksha. Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21. Saya ingin bunuh diri")

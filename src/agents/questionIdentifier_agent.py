@@ -21,7 +21,8 @@ class QuestionIdentifierAgent:
         print("Expanded Question:", expanded_question)
 
         print(state["question"])
-        print(initiated_agents)
+        data = initiated_agents.keys()
+        print(list(data))
 
         print('--- QUESTION IDENTIFIER AGENT ---\n\n')
-        return {"question_type": response, "initiated_agents": initiated_agents}
+        return {"question_type": response, "initiated_agents": initiated_agents, "activeAgent": list(data)}

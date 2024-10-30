@@ -11,7 +11,13 @@ class AccountAgent:
         question = state["initiated_agents"]['ACCOUNT_AGENT']
         print("Pertanyaan ACCOUNT: ", question)
 
-        response = chat_openai(question, ACCOUNT_PROMPT)
+        messages = [
+            SystemMessage(content=ACCOUNT_PROMPT),
+            HumanMessage(content=question),
+        ]
+        
+
+        response = chat_openai(messages)
 
         result = [item.strip() for item in response.split(",")]
 
@@ -110,9 +116,14 @@ class AccountAgent:
     def incompleteInformationAgent(state: AgentState):
         question = state["initiated_agents"]['ACCOUNT_AGENT']
         reason = state['incompleteReason']
-        message = f"Pertanyaan dari user adalah:  {question}, sedangkan alasan tidak validnya karena : {reason}"
+        user_message = f"Pertanyaan dari user adalah:  {question}, sedangkan alasan tidak validnya karena : {reason}"
         
-        response = chat_openai(message, INCOMPLETEACCOUNT_PROMPT)
+        messages = [
+            SystemMessage(content=INCOMPLETEACCOUNT_PROMPT),
+            HumanMessage(content=user_message),
+        ]
+
+        response = chat_openai(messages)
 
         agent = "ACCOUNT_AGENT"
 

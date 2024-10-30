@@ -19,22 +19,23 @@ def general_chain(query: str):
     loader = PyPDFDirectoryLoader("src/datasets/general")
     docs = loader.load()
 
-    # Split dokumen
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=900,  #900
-        chunk_overlap=100 #100
-    )
 
-    splits = text_splitter.split_documents(docs)
-
-    print(splits)
-
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     if not os.path.exists("src/vectordb"):
         os.makedirs("src/vectordb")
 
     # Simpan ke FAISS
     if not os.path.exists("src/vectordb/db_general"):
+        # Split dokumen
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=900,  #900
+            chunk_overlap=200 #100
+        )
+
+        splits = text_splitter.split_documents(docs)
+
+        print(splits)
+
         vectorstore = FAISS.from_documents(splits, embeddings)
 
         # Simpan vectorstore ke disk (opsional tapi direkomendasikan)
@@ -54,11 +55,18 @@ def general_chain(query: str):
     
     print("Relevan data", relevant_data)
     
-    messages = f"""
+    user_messages = f"""
         Pertanyaan pengguna: {query}
         Data yang diberikan: {relevant_data}
     """
-    answer = chat_openai(messages, GENERAL_PROMPT)
+
+    messages = [
+            SystemMessage(content=GENERAL_PROMPT),
+            HumanMessage(content=user_messages),
+        ]
+        
+
+    answer = chat_openai(messages)
     print("Isi prompt:\n", GENERAL_PROMPT)
     print("Hasil GENERAL CHAIN:\n", answer)
     return answer

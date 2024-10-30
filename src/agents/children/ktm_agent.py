@@ -35,9 +35,16 @@ class KTMAgent:
             response = False
         is_complete = response == True
 
+        agent = "ACCOUNT_AGENT"
+
+        agentOpinion = {
+            "agent": agent,
+            "answer": response
+        }
+
         state["checkKTM"] = is_complete
         print(f"Info KTM Lengkap? {is_complete}")
-        return {"checkKTM": state["checkKTM"]}
+        return {"checkKTM": state["checkKTM"], "agentAnswer": [agentOpinion]}
 
 
     def incompleteInfoKTMAgent(state: AgentState):

@@ -48,7 +48,7 @@ INCOMPLETEACCOUNT_PROMPT = """
 
 
 GENERAL_PROMPT = """
-    Kamu adalah seorang analis handal mencari apa yang ditanyakan pada data yang diberikan untuk menjawab pertanyaan. Hasilkan jawaban dengan akurat
+    Anda adalah agen yang khusus menjawab pertanyaan berdasarkan data yang saya berikan, cari jawaban yang memang hanya berkaitan dengan pertanyaan yang diberikan. hindari awalan "Berdasarkan data yang diberikan"
 """
 
 

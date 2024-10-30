@@ -113,6 +113,6 @@ def build_graph(question: str):
 
     return response["response"]
 
-build_graph("berapa NIP I Ketut resika arthana")
+build_graph("Siapa rektor undiksha? Bagaimana akademik undiksha? Bagaimana mahasiswa undiksha? apa berita terbaru undiksha? Saya ingin reset password sso undiksha. Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21. Saya ingin bunuh diri")
 # DEBUG QUERY EXAMPLES
 # build_graph("Siapa rektor undiksha? Bagaimana akademik undiksha? Bagaimana mahasiswa undiksha? apa berita terbaru undiksha? Saya ingin reset password sso undiksha. Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21. Saya ingin bunuh diri")

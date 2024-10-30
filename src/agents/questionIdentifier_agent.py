@@ -15,13 +15,13 @@ class QuestionIdentifierAgent:
         
         response = chat_openai(state['question'], QUESTIONIDENTIFIER_PROMPT)
         matches = re.findall(r'(\w+): "([^"]+)"', response)
-        result = dict(matches)
+        initiated_agents = dict(matches)
 
-        # print("Original Question:", original_question)
-        # print("Expanded Question:", expanded_question)
+        print("Original Question:", original_question)
+        print("Expanded Question:", expanded_question)
 
         print(state["question"])
-        print(matches)
+        print(initiated_agents)
 
         print('--- QUESTION IDENTIFIER AGENT ---\n\n')
-        return {"question_type": response, "activeAgent": activeAgents}
+        return {"question_type": response, "initiated_agents": initiated_agents}

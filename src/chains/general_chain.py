@@ -41,18 +41,18 @@ def general_chain(query: str):
     # Cari dengan FAISS
     db = FAISS.load_local("src/vectordb/db_general", embeddings, allow_dangerous_deserialization=True)
     response = db.similarity_search_with_relevance_scores(query, k=5)
-    # for doc, similarity in response:
-    #     print(f"Content: {doc.page_content}")
-    #     print(f"Similarity: {similarity}")
-    #     print("-" * 50) 
-
-    prompt = GENERAL_PROMPT.format(question=query, data=response)
-    messages = [
-        HumanMessage(content=prompt)
-    ]
-    answer = chat_openai(messages)
-    print("Isi prompt:\n", prompt)
-    print("Hasil post retrieval:\n", answer)
+    for doc, similarity in response:
+        print(f"Content: {doc.page_content}")
+        print(f"Similarity: {similarity}")
+        print("-" * 50) 
+    
+    messages = f"""
+        Pertanyaan pengguna: {query}
+        Data yang diberikan: {response}
+    """
+    answer = chat_openai(messages, GENERAL_PROMPT)
+    print("Isi prompt:\n", GENERAL_PROMPT)
+    print("Hasil GENERAL CHAIN:\n", answer)
     return answer
 
 

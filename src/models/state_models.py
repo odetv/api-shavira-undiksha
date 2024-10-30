@@ -16,6 +16,7 @@ class AgentState(TypedDict):
     incompleteReason : Optional[str] = None
     accountAgentType : Optional[str] = None
     agentAnswer : Annotated[Sequence[AnswerState], add]
+    initiated_agents : Optional[dict] = None
     activeAgent : Optional[list] = None
     checkKelulusan: str
     noPendaftaran: str

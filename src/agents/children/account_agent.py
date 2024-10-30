@@ -8,13 +8,10 @@ import json
 class AccountAgent:
     @staticmethod
     def accountAgent(state: AgentState):
-        message = ACCOUNT_PROMPT.format(question=state['question'])
+        question = state["initiated_agents"]['ACCOUNT_AGENT']
+        print("Pertanyaan ACCOUNT: ", question)
 
-        messages = [
-            HumanMessage(content=message)
-        ]
-
-        response = chat_openai(messages)
+        response = chat_openai(question, ACCOUNT_PROMPT)
 
         result = [item.strip() for item in response.split(",")]
 

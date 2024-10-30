@@ -9,9 +9,9 @@ class ResultWriterAgent:
     def resultWriterAgent(state: AgentState):
         print(state["agentAnswer"])
 
-        if len(state["agentAnswer"]) == len(state["activeAgent"]):
-            print("Ini agen yang aktif", state["activeAgent"])
-            print("Ini jawaban dari agen yang aktif", state["agentAnswer"])
+        if len(state["agentAnswer"]) == len(state["initiated_agents"]):
+            print("Ini agen yang aktif", state["initiated_agents"])
+            print("Ini jawaban dari agen yang aktif", state["initiated_agents"].keys())
 
             sorted_answer = sort_answer_by_agent(state["activeAgent"], state["agentAnswer"])
 

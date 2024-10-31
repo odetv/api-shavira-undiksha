@@ -8,12 +8,12 @@ from src.agents import *
 def build_graph(question: str):
     workflow = StateGraph(AgentState)
     initial_state = QuestionIdentifierAgent.questionIdentifierAgent({"question": question})
-    context = initial_state["activeAgent"]
+    context = initial_state["initiated_agents"].keys()
     workflow.add_node("questionIdentifier_agent",  lambda state: initial_state)
     workflow.add_node("resultWriter_agent", ResultWriterAgent.resultWriterAgent)
     workflow.add_edge(START, "questionIdentifier_agent")
 
-    if "account_agent" in context:
+    if "ACCOUNT_AGENT" in context:
         workflow.add_node("account_agent",  AccountAgent.accountAgent)
 
         workflow.add_node("accountHelp_agent", AccountAgent.accountHelp)
@@ -53,27 +53,17 @@ def build_graph(question: str):
             }
         )
 
-    if "academic_agent" in context:
-        workflow.add_node("academic_agent", AcademicAgent.academicAgent)
-        workflow.add_edge("questionIdentifier_agent", "academic_agent")
-        workflow.add_edge("academic_agent", "resultWriter_agent")
-
-    if "student_agent" in context:
-        workflow.add_node("student_agent", StudentAgent.studentAgent)
-        workflow.add_edge("questionIdentifier_agent", "student_agent")
-        workflow.add_edge("student_agent", "resultWriter_agent")
-
-    if "news_agent" in context:
+    if "NEWS_AGENT" in context:
         workflow.add_node("news_agent", NewsAgent.newsAgent)
         workflow.add_edge("questionIdentifier_agent", "news_agent")
         workflow.add_edge("news_agent", "resultWriter_agent")
 
-    if "general_agent" in context:
+    if "GENERAL_AGENT" in context:
         workflow.add_node("general_agent", GeneralAgent.generalAgent)
         workflow.add_edge("questionIdentifier_agent", "general_agent")
         workflow.add_edge("general_agent", "resultWriter_agent")
 
-    if "kelulusan_agent" in context:
+    if "KELULUSAN_AGENT" in context:
         workflow.add_node("kelulusan_agent", KelulusanAgent.kelulusanAgent)
         workflow.add_node("incompleteInfoKelulusan_agent", KelulusanAgent.incompleteInfoKelulusanAgent)
         workflow.add_node("infoKelulusan_agent", KelulusanAgent.infoKelulusanAgent)
@@ -89,7 +79,7 @@ def build_graph(question: str):
         workflow.add_edge("incompleteInfoKelulusan_agent", "resultWriter_agent")
         workflow.add_edge("infoKelulusan_agent", "resultWriter_agent")
 
-    if "ktm_agent" in context:
+    if "KTM_AGENT" in context:
         workflow.add_node("ktm_agent", KTMAgent.ktmAgent)
         workflow.add_node("incompleteInfoKTM_agent", KTMAgent.incompleteInfoKTMAgent)
         workflow.add_node("infoKTM_agent", KTMAgent.infoKTMAgent)
@@ -105,10 +95,15 @@ def build_graph(question: str):
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
-    if "outofcontext_agent" in context :
-        workflow.add_node("outOfContext_agent", OutOfContextAgent.outOfContextAgent)
-        workflow.add_edge("questionIdentifier_agent", "outOfContext_agent")
-        workflow.add_edge("outOfContext_agent", "resultWriter_agent")
+    if "GREETING_AGENT" in context:
+        workflow.add_node("greeting_agent", GreetingAgent.greet)
+        workflow.add_edge("questionIdentifier_agent", "greeting_agent")
+        workflow.add_edge("greeting_agent", "resultWriter_agent")
+
+    # if "outofcontext_agent" in context :
+    #     workflow.add_node("outOfContext_agent", OutOfContextAgent.outOfContextAgent)
+    #     workflow.add_edge("questionIdentifier_agent", "outOfContext_agent")
+    #     workflow.add_edge("outOfContext_agent", "resultWriter_agent")
 
     workflow.add_edge("resultWriter_agent", END)
 
@@ -118,6 +113,6 @@ def build_graph(question: str):
 
     return response["response"]
 
-build_graph("hai")
+build_graph("Siapa rektor undiksha? Bagaimana akademik undiksha? Bagaimana mahasiswa undiksha? apa berita terbaru undiksha? Saya ingin reset password sso undiksha. Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21. Saya ingin bunuh diri")
 # DEBUG QUERY EXAMPLES
 # build_graph("Siapa rektor undiksha? Bagaimana akademik undiksha? Bagaimana mahasiswa undiksha? apa berita terbaru undiksha? Saya ingin reset password sso undiksha. Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21. Saya ingin bunuh diri")

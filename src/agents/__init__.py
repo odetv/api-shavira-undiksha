@@ -9,3 +9,4 @@ from .children.student_agent import StudentAgent
 from .children.kelulusan_agent import KelulusanAgent
 from .children.ktm_agent import KTMAgent
 from .children.outOfContext_agent import OutOfContextAgent
+from .children.greeting_agent import GreetingAgent

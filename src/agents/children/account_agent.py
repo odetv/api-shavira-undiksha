@@ -8,11 +8,14 @@ import json
 class AccountAgent:
     @staticmethod
     def accountAgent(state: AgentState):
-        message = ACCOUNT_PROMPT.format(question=state['question'])
+        question = state["initiated_agents"]['ACCOUNT_AGENT']
+        print("Pertanyaan ACCOUNT: ", question)
 
         messages = [
-            HumanMessage(content=message)
+            SystemMessage(content=ACCOUNT_PROMPT),
+            HumanMessage(content=question),
         ]
+        
 
         response = chat_openai(messages)
 
@@ -111,10 +114,15 @@ class AccountAgent:
 
     @staticmethod
     def incompleteInformationAgent(state: AgentState):
-        question=INCOMPLETEACCOUNT_PROMPT.format(question=state['question'], reason=state['incompleteReason'])
+        question = state["initiated_agents"]['ACCOUNT_AGENT']
+        reason = state['incompleteReason']
+        user_message = f"Pertanyaan dari user adalah:  {question}, sedangkan alasan tidak validnya karena : {reason}"
+        
         messages = [
-            HumanMessage(content=question)
+            SystemMessage(content=INCOMPLETEACCOUNT_PROMPT),
+            HumanMessage(content=user_message),
         ]
+
         response = chat_openai(messages)
 
         agent = "ACCOUNT_AGENT"

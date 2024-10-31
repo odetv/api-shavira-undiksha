@@ -1,8 +1,10 @@
 def sort_answer_by_agent(active_agents: list, answers: list):
-    sorted_answers = sorted(
-        answers,
-        key=lambda x: active_agents.index(x['agent'].lower()) if x['agent'].lower() in active_agents else len(active_agents))
+    print("Active agents: ", active_agents)
+    print("Answers: ", answers)
+    
+    # Urutkan dan ambil hanya bagian answer
+    sorted_answers = [resp['answer'] for resp in sorted(answers, key=lambda x: active_agents.index(x['agent']))]
 
-    answers_list = [answer['answer'] for answer in sorted_answers]
+    print(sorted_answers)
 
-    return answers_list
+    return sorted_answers

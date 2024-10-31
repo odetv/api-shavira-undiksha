@@ -5,7 +5,7 @@ from src.chains import general_chain
 class GeneralAgent:
     @staticmethod
     def generalAgent(state: AgentState):
-        question = state["question"]
+        question = state["initiated_agents"]['GENERAL_AGENT']
         answer = general_chain(question)
         agent = "GENERAL_AGENT"
 

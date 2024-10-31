@@ -14,12 +14,12 @@ STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
 
 
 def setup_page():
-    st.set_page_config(layout="wide", page_title="Debug - VA PMB Undiksha", page_icon="assets/images/logo.png")
+    st.set_page_config(layout="wide", page_title="Debug - Shavira Undiksha", page_icon="assets/images/logo.png")
     st.sidebar.image("assets\images\logo.png", use_column_width=True)
-    st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant PMB Undiksha")
+    st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant Shavira Undiksha")
     with st.sidebar:
-        "[Source Code](https://github.com/odetv/va-pmb-undiksha)"
-        "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/odetv/va-pmb-undiksha?quickstart=1)"
+        "[Source Code](https://github.com/odetv/va-shavira-undiksha)"
+        "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/odetv/va-shavira-undiksha?quickstart=1)"
 
 
 def load_documents():

@@ -40,9 +40,8 @@ class AgentState(TypedDict):
 
     newsScrapper: str
 
-    emailAccount: Optional[str] = None
+    emailAccountUser: Optional[str] = None
     loginAccountStatus : Optional[str] = None
     checkAccount: str
-    responseAccount: str
 
     memory: ConversationBufferMemory

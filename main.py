@@ -14,14 +14,15 @@ from utils.scrapper_rss import scrap_news
 
 
 
+
 @time_check
 def questionIdentifierAgent(state: AgentState):
     info = "\n--- QUESTION IDENTIFIER ---"
     print(info)
 
     original_question = state['question']
-    # cleaned_question = re.sub(r'\n+', ' ', original_question)
-    expanded_question = query_expansion(original_question, CONTEXT_ABBREVIATIONS)
+    cleaned_question = re.sub(r'\n+', ' ', original_question)
+    expanded_question = query_expansion(cleaned_question, CONTEXT_ABBREVIATIONS)
     state["question"] = expanded_question
 
     promptTypeQuestion = """
@@ -29,7 +30,7 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 6 konteks diajukan:
-        - GENERAL_AGENT - Berkaitan dengan informasi Undiksha baik informasi umum undiksha, informasi akademik, informasi mahasiswa dll.
+        - GENERAL_AGENT - Berkaitan dengan informasi Undiksha baik informasi umum undiksha, informasi akademik, informasi mahasiswa, dan jika ada yang bertanya tentang dirimu atau sapaan.
         - NEWS_AGENT - Berkaitan berita-berita terbaru di Universitas pendidikan Ganesha.
         - ACCOUNT_AGENT - Bekaitan dengan reset ulang password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
@@ -72,7 +73,6 @@ def questionIdentifierAgent(state: AgentState):
     state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
     state["ktmQuestion"] = ktm_question_match.group(1) if ktm_question_match and ktm_question_match.group(1) else "Tidak ada informasi"
     state["outOfContextQuestion"] = out_of_context_question_match.group(1) if out_of_context_question_match and out_of_context_question_match.group(1) else "Tidak ada informasi"
-
     print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
     print(f"Debug: State 'newsQuestion' setelah update: {state['newsQuestion']}")
     print(f"Debug: State 'accountQuestion' setelah update: {state['accountQuestion']}")
@@ -139,9 +139,9 @@ def answerGeneratorAgent(state: AgentState):
 
     prompt = f"""
     Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
-    - Anda bertugas untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha.
+    - Anda bertugas untuk memberikan informasi terkait dengan Universitas Pendidikan Ganesha.
     - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
-    - Jika ditanya siapa Anda, identitas Anda sebagai Virtual Assistant Penerimaan Mahasiswa Baru Undiksha.
+    - Jika ditanya siapa Anda, identitas Anda sebagai Shavira (Ganesha Virtual Assistant) Undiksha.
     - Berikan jawaban yang akurat dan konsisten untuk lebih dari satu pertanyaan yang mirip atau sama hanya berdasarkan konteks yang telah diberikan.
     - Jawab sesuai apa yang ditanyakan saja dan jangan menggunakan informasi diluar konteks, sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya.
     - Jangan berkata kasar, menghina, sarkas, satir, atau merendahkan pihak lain.
@@ -217,6 +217,165 @@ def newsAgent(state: AgentState):
         "answer": response
     }
     state["finishedAgents"].add("news_agent")
+    return {"answerAgents": [agentOpinion]}
+
+
+
+@time_check
+def accountAgent(state: AgentState):
+    info = "\n--- ACCOUNT ---"
+    print(info)
+
+    ACCOUNT_PROMPT = """
+        Anda adalah seorang admin dari sistem akun Undiksha (Universitas Pendidikan Ganesha).
+        Tugas Anda adalah mengklasifikasikan jenis pertanyaan.
+        Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
+        Ada 3 konteks pertanyaan yang diajukan:
+        - RESET - Hanya jika terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id" dan terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email dan status).
+        - INCOMPLETE - Hanya jika tidak terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id" atau tidak terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email atau status).
+        - ANOMALI - Hanya jika lupa email dan tidak mengetahui status login dengan jelas.
+        Hati-hati dengan domain email yang serupa atau mirip, pastikan benar-benar sesuai.
+        Hasilkan hanya 1 kata yang paling sesuai (RESET, INCOMPLETE, ANOMALI).
+    """
+    messages = [
+        SystemMessage(content=ACCOUNT_PROMPT),
+        HumanMessage(content=state["accountQuestion"]),
+    ]
+    response = chat_openai(messages).strip().lower()
+    state["checkAccount"] = response
+    state["finishedAgents"].add("account_agent") 
+    print(f"Info Account Lengkap? {response}")
+
+    promptParsingAccount = """
+        Anda adalah seoarang pemecah isi pertanyaan pengguna.
+        Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
+        Ada 2 konteks penting dalam pertanyaan dari pengguna untuk dimasukkan ke variabel:
+        - emailAccountUser - Masukkan hanya jika terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id", jika email tidak sesuai maka masukkan "null".
+        - loginAccountStatus - Jika ada informasi status sudah login di email/gmail/google/hp/laptop/komputer maka masukkan "true", jika tidak ada kejelasan maka masukkan "false".
+        Hati-hati dengan domain email yang serupa atau mirip, pastikan benar-benar sesuai.
+        Jawab sesuai dengan kategori dengan contoh seperti ({"emailAccountUser": "email valid", "loginAccountStatus": "true atau false"}).
+        Buat dengan format data JSON tanpa membuat key baru.
+    """
+    messagesParsingAccount = [
+        SystemMessage(content=promptParsingAccount),
+        HumanMessage(content=state["accountQuestion"]),
+    ]
+    responseParsingAccount = chat_openai(messagesParsingAccount).strip().lower()
+
+    json_like_data = re.search(r'\{.*\}', responseParsingAccount, re.DOTALL)
+    if json_like_data:
+        cleaned_response = json_like_data.group(0)
+        print(f"DEBUG: Bagian JSON-like yang diambil: {cleaned_response}")
+    else:
+        print("DEBUG: Tidak ditemukan data JSON-like.")
+        cleaned_response = ""
+    emailAccountUser_match = re.search(r'"emailaccountuser"\s*:\s*"([^"]*)"', cleaned_response)
+    loginAccountStatus_match = re.search(r'"loginaccountstatus"\s*:\s*"([^"]*)"', cleaned_response)
+    state["emailAccountUser"] = emailAccountUser_match.group(1) if emailAccountUser_match and emailAccountUser_match.group(1) else "Tidak ada informasi"
+    state["loginAccountStatus"] = loginAccountStatus_match.group(1) if loginAccountStatus_match and loginAccountStatus_match.group(1) else "Tidak ada informasi"
+    print(f"Debug: State 'emailAccountUser' setelah update: {state['emailAccountUser']}")
+    print(f"Debug: State 'loginAccountStatus' setelah update: {state['loginAccountStatus']}")
+    
+    return state
+
+
+
+@time_check
+def resetAccountAgent(state: AgentState):
+    info = "\n--- Reset Account ---"
+    print(info)
+
+    emailAccountUser = state["emailAccountUser"]
+    loginAccountStatus = state["loginAccountStatus"]
+
+    prompt = f"""
+    Anda adalah seorang pengirim pesan informasi Undiksha.
+    Tugas Anda untuk memberitahu pengguna bahwa:
+    Selamat, pengajuan proses reset password akun SSO E-Ganesha Undiksha berhasil!
+    Berikut informasi akun Pengguna:
+    - Email Account User: {emailAccountUser}
+    - Login Account Status: Cek pada {loginAccountStatus} jika true = Sudah login, tapi jika false = Belum login
+    Petunjuk untuk Pengguna:
+    - Buka Aplikasi Gmail di HP atau Melalui Browser pada Laptop/Desktop Anda.
+    - Pastikan sudah menggunakan akun google dari Undiksha.
+    - Di Gmail, silahkan cek email Anda dari Undiksha.
+    - Silahkan tekan tombol reset password atau klik link reset passwordnya.
+    - Ikuti langkah untuk memasukkan password baru yang sesuai.
+    - Jika sudah berhasil, silahkan login kembali ke SSO E-Ganesha Undiksha.
+    """
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["accountQuestion"])
+    ]
+    response = chat_openai(messages)
+    agentOpinion = {
+        "answer": response
+    }
+    state["finishedAgents"].add("resetAccount_agent") 
+    return {"answerAgents": [agentOpinion]}
+
+
+
+@time_check
+def incompleteAccountAgent(state: AgentState):
+    info = "\n--- Incomplete Account ---"
+    print(info)
+
+    emailAccountUser = state["emailAccountUser"]
+    loginAccountStatus = state["loginAccountStatus"]
+
+    prompt = f"""
+    Anda adalah seorang pengirim pesan informasi Undiksha.
+    Tugas Anda untuk memberitahu pengguna bahwa:
+    Mohon maaf, pengajuan proses reset password akun SSO E-Ganesha Undiksha tidak berhasil!
+    Berikut informasi dari yang pengguna berikan:
+    - Email Account User: {emailAccountUser} jika null = Tidak disebutkan
+    - Login Account Status: {loginAccountStatus} jika true = Sudah login, tapi jika false = Belum login
+    Petunjuk untuk Pengguna:
+    - Email valid dari Undiksha "@undiksha.ac.id" atau "@student.undiksha.ac.id"
+    - Status login di perangkat harus jelas apakah sudah login atau belum di email/gmail/google/hp/laptop/komputer.
+    - Beritahu kesalahan pengguna.
+    Format Pengajuan:
+    - Email: Masukkan Email (contoh: shavira@undiksha.ac.id atau shavira@student.undiksha.ac.id)
+    - Login Status: Masukkan Status Login (Contoh: Sudah Login / Belum Login di Perangkat)
+    """
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["accountQuestion"])
+    ]
+    response = chat_openai(messages)
+
+    agentOpinion = {
+        "answer": response
+    }
+    state["finishedAgents"].add("incompleteAccount_agent") 
+    return {"answerAgents": [agentOpinion]}
+
+
+
+@time_check
+def anomaliAccountAgent(state: AgentState):
+    info = "\n--- Anomali Account ---"
+    print(info)
+
+    prompt = f"""
+        Anda adalah seorang pengirim pesan informasi Undiksha.
+        Tugas Anda untuk memberitahu pengguna bahwa:
+        Mohon maaf, pengajuan proses mengenai akun SSO E-Ganesha Undiksha Anda terdapat anomali!
+        Berikut petunjuk untuk disampaikan kepada pengguna berdasarkan informasi dari akun pengguna:
+        - Silahkan datang langsung ke Kantor UPA TIK Undiksha untuk memproses akun Anda.
+        - Atau cek pada kontak berikut: https://upttik.undiksha.ac.id/kontak-kami
+    """
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["accountQuestion"])
+    ]
+    response = chat_openai(messages)
+
+    agentOpinion = {
+        "answer": response
+    }
+    state["finishedAgents"].add("anomaliAccount_agent") 
     return {"answerAgents": [agentOpinion]}
 
 
@@ -445,62 +604,6 @@ def outOfContextAgent(state: AgentState):
 
 
 @time_check
-def accountAgent(state: AgentState):
-    info = "\n--- ACCOUNT ---"
-    print(info)
-
-    ACCOUNT_PROMPT = """
-        Anda adalah seorang admin dari sistem akun Undiksha (Universitas Pendidikan Ganesha).
-        Tugas Anda adalah mengklasifikasikan jenis pertanyaan.
-        Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
-        Ada 2 konteks pertanyaan yang diajukan:
-        - TRUE - Jika pengguna menyertakan email dengan domain @undiksha.ac.id atau @student.undiksha.ac.id dan mengatakan status sudah login atau belum di gmail google.
-        - FALSE - Jika pengguna tidak menyertakan email dengan domain @undiksha.ac.id atau @student.undiksha.ac.id dan belum mengatakan status sudah login atau belum di gmail google.
-        Hasilkan hanya 1 sesuai kata (TRUE, FALSE).
-    """
-    messages = [
-        SystemMessage(content=ACCOUNT_PROMPT),
-        HumanMessage(content=state["accountQuestion"])
-    ]
-    response = chat_openai(messages).strip().lower()
-
-    is_complete = response == "true"
-    state["checkAccount"] = is_complete
-    state["finishedAgents"].add("account_agent") 
-    print(f"Info Account Lengkap? {is_complete}")
-    return {"checkAccount": state["checkAccount"]}
-
-
-
-@time_check
-def resetAccountAgent(state: AgentState):
-    info = "\n--- Reset Account ---"
-    print(info)
-
-    answer = "Proses reset password berhasil, silahkan cek email anda dan klik link reset passwordnya"
-    agentOpinion = {
-        "answer": answer
-    }
-    state["finishedAgents"].add("resetAccount_agent") 
-    return {"answerAgents": [agentOpinion]}
-
-
-
-@time_check
-def incompleteAccountAgent(state: AgentState):
-    info = "\n--- Incomplete Account ---"
-    print(info)
-
-    answer = "Tanyakan apakah akun undiksha tersebut sudah diloginkan di perangkatnya?"
-    agentOpinion = {
-        "answer": answer
-    }
-    state["finishedAgents"].add("incompleteAccount_agent") 
-    return {"answerAgents": [agentOpinion]}
-
-
-
-@time_check
 def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
@@ -584,17 +687,20 @@ def build_graph(question):
         workflow.add_node("account_agent", accountAgent)
         workflow.add_node("resetAccount_agent", resetAccountAgent)
         workflow.add_node("incompleteAccount_agent", incompleteAccountAgent)
+        workflow.add_node("anomaliAccount_agent", anomaliAccountAgent)
         workflow.add_edge("questionIdentifier_agent", "account_agent")
         workflow.add_conditional_edges(
             "account_agent",
             lambda state: state["checkAccount"],
             {
-                True: "resetAccount_agent",
-                False: "incompleteAccount_agent"
+                "reset": "resetAccount_agent",
+                "incomplete": "incompleteAccount_agent",
+                "anomali": "anomaliAccount_agent"
             }
         )
         workflow.add_edge("resetAccount_agent", "resultWriter_agent")
         workflow.add_edge("incompleteAccount_agent", "resultWriter_agent")
+        workflow.add_edge("anomaliAccount_agent", "resultWriter_agent")
 
     if "kelulusan_agent" in context:
         workflow.add_node("kelulusan_agent", kelulusanAgent)
@@ -650,4 +756,4 @@ def build_graph(question):
 # build_graph("Saya ingin cetak ktm 2115101014.")
 # build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa bupati buleleng?")
-build_graph("saya ingin reset password sso e-ganesha email gelgel.abdiutama@undiksha.ac.id sudah login")
+build_graph("kamu siapa?")

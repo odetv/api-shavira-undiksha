@@ -17,10 +17,10 @@ INITIAL_MESSAGE = {"role": "assistant", "content": "Salam Harmoni🙏 Ada yang b
 
 
 def setup_page():
-    st.set_page_config(page_title="VA PMB Undiksha", layout="wide", page_icon="assets/images/logo.png")
+    st.set_page_config(page_title="Shavira Undiksha", layout="wide", page_icon="assets/images/logo.png")
     st.sidebar.image("assets/images/logo.png", use_column_width=True)
-    st.sidebar.title("Virtual Assistant PMB Undiksha")
-    st.sidebar.write("Hai, selamat datang di Virtual Assistant Penerimaan Mahasiswa Baru Undiksha! Aku siap membantumu.")
+    st.sidebar.title("Virtual Assistant Shavira Undiksha")
+    st.sidebar.write("Hai, selamat datang di Virtual Assistant Undiksha! Aku siap membantumu.")
     st.sidebar.markdown("""
     <p style="color:gray;">
         <small>Developed by: <strong>I Gede Gelgel Abdiutama</strong></small><br>

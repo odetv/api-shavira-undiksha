@@ -1,5 +1,5 @@
 from operator import add
-from typing_extensions import TypedDict, Annotated, Sequence, Set
+from typing_extensions import TypedDict, Annotated, Sequence, Optional, Set
 from langchain.memory import ConversationBufferMemory
 
 
@@ -30,8 +30,19 @@ class AgentState(TypedDict):
     responseFinal: str
     finishedAgents: Set[str]
     answerAgents : Annotated[Sequence[AnswerState], add]
+
     generalQuestion: str
+    newsQuestion: str
+    accountQuestion: str
     kelulusanQuestion: str
     ktmQuestion: str
     outOfContextQuestion: str
+
+    newsScrapper: str
+
+    emailAccount: Optional[str] = None
+    loginAccountStatus : Optional[str] = None
+    checkAccount: str
+    responseAccount: str
+
     memory: ConversationBufferMemory

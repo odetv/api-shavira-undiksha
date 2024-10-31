@@ -2,7 +2,6 @@ import re
 
 
 CONTEXT_ABBREVIATIONS = {
-    "UNDIKSHA": "Universitas Pendidikan Ganesha",
     "FTK": "Fakultas Teknik dan Kejuruan (FTK) Undiksha",
     "FOK": "Fakultas Olahraga dan Kesehatan (FOK) Undiksha",
     "FMIPA": "Fakultas Matematika dan Ilmu Pengetahuan Alam (FMIPA) Undiksha",

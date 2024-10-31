@@ -1,3 +1,4 @@
+import json
 import re
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
@@ -9,6 +10,8 @@ from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
+from utils.scrapper_rss import scrap_news
+
 
 
 @time_check
@@ -17,21 +20,23 @@ def questionIdentifierAgent(state: AgentState):
     print(info)
 
     original_question = state['question']
-    cleaned_question = re.sub(r'\n+', ' ', original_question)
-    expanded_question = query_expansion(cleaned_question, CONTEXT_ABBREVIATIONS)
+    # cleaned_question = re.sub(r'\n+', ' ', original_question)
+    expanded_question = query_expansion(original_question, CONTEXT_ABBREVIATIONS)
     state["question"] = expanded_question
 
     promptTypeQuestion = """
         Anda adalah seoarang pemecah pertanyaan pengguna.
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
-        Ada 4 konteks diajukan:
-        - GENERAL_AGENT - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
+        Ada 6 konteks diajukan:
+        - GENERAL_AGENT - Berkaitan dengan informasi Undiksha baik informasi umum undiksha, informasi akademik, informasi mahasiswa dll.
+        - NEWS_AGENT - Berkaitan berita-berita terbaru di Universitas pendidikan Ganesha.
+        - ACCOUNT_AGENT - Bekaitan dengan reset ulang password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
         - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha, biasanya pertanyaan pengguna berisi Nomor Induk Mahasiswa (NIM).
         - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
-        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm", "OUTOFCONTEXT_AGENT": "pertanyaan relevan terkait out of context"}) begitu seterusnya.
+        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "pertanyaan relevan terkait news", "ACCOUNT_AGENT": "pertanyaan relevan terkait akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm", "OUTOFCONTEXT_AGENT": "pertanyaan relevan terkait out of context"}) begitu seterusnya.
         Buat dengan format data JSON tanpa membuat key baru.
     """
     messagesTypeQuestion = [
@@ -55,21 +60,28 @@ def questionIdentifierAgent(state: AgentState):
         cleaned_response = ""
 
     general_question_match = re.search(r'"general_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    news_question_match = re.search(r'"news_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    account_question_match = re.search(r'"account_agent"\s*:\s*"([^"]*)"', cleaned_response)
     kelulusan_question_match = re.search(r'"kelulusan_agent"\s*:\s*"([^"]*)"', cleaned_response)
     ktm_question_match = re.search(r'"ktm_agent"\s*:\s*"([^"]*)"', cleaned_response)
     out_of_context_question_match = re.search(r'"outofcontext_agent"\s*:\s*"([^"]*)"', cleaned_response)
 
     state["generalQuestion"] = general_question_match.group(1) if general_question_match and general_question_match.group(1) else "Tidak ada informasi"
+    state["newsQuestion"] = news_question_match.group(1) if news_question_match and news_question_match.group(1) else "Tidak ada informasi"
+    state["accountQuestion"] = account_question_match.group(1) if account_question_match and account_question_match.group(1) else "Tidak ada informasi"
     state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
     state["ktmQuestion"] = ktm_question_match.group(1) if ktm_question_match and ktm_question_match.group(1) else "Tidak ada informasi"
     state["outOfContextQuestion"] = out_of_context_question_match.group(1) if out_of_context_question_match and out_of_context_question_match.group(1) else "Tidak ada informasi"
 
     print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
+    print(f"Debug: State 'newsQuestion' setelah update: {state['newsQuestion']}")
+    print(f"Debug: State 'accountQuestion' setelah update: {state['accountQuestion']}")
     print(f"Debug: State 'kelulusanQuestion' setelah update: {state['kelulusanQuestion']}")
     print(f"Debug: State 'ktmQuestion' setelah update: {state['ktmQuestion']}")
     print(f"Debug: State 'outOfContextQuestion' setelah update: {state['outOfContextQuestion']}")
 
     return state
+
 
 
 @time_check
@@ -89,6 +101,7 @@ def generalAgent(state: AgentState):
     state["finishedAgents"].add("general_agent")
     # print(state["generalContext"])
     return {"generalContext": state["generalContext"]}
+
 
 
 @time_check
@@ -116,6 +129,7 @@ def graderDocsAgent(state: AgentState):
     state["finishedAgents"].add("graderDocs_agent")
     # print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
+
 
 
 @time_check
@@ -152,6 +166,7 @@ def answerGeneratorAgent(state: AgentState):
     return {"answerAgents": [agentOpinion]}
 
 
+
 @time_check
 def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Grader Hallucinations ---"
@@ -175,6 +190,35 @@ def graderHallucinationsAgent(state: AgentState):
     state["finishedAgents"].add("graderHallucinations_agent")
     print(f"Apakah hasil halusinasi? {is_hallucination}")
     return {"generalIsHallucination": state["generalIsHallucination"]}
+
+
+
+@time_check
+def newsAgent(state: AgentState):
+    info = "\n--- News ---"
+    print(info)
+
+    result = scrap_news()
+    state["newsScrapper"] = result
+
+    prompt = f"""
+    Anda adalah seorang pengelola berita.
+    Berikut berita yang terbaru saat ini.
+    - Data Berita: {state["newsScrapper"]}
+    """
+
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["newsQuestion"])
+    ]
+    response = chat_openai(messages)
+    
+    agentOpinion = {
+        "answer": response
+    }
+    state["finishedAgents"].add("news_agent")
+    return {"answerAgents": [agentOpinion]}
+
 
 
 @time_check
@@ -215,6 +259,7 @@ def kelulusanAgent(state: AgentState):
     state["finishedAgents"].add("kelulusan_agent") 
     print(f"Info Kelulusan Lengkap? {is_complete}")
     return {"checkKelulusan": state["checkKelulusan"]}
+
 
 
 @time_check
@@ -290,6 +335,7 @@ def infoKelulusanAgent(state: AgentState):
     return {"answerAgents": [agentOpinion]}
 
 
+
 @time_check
 def ktmAgent(state: AgentState):
     info = "\n--- KTM ---"
@@ -326,6 +372,7 @@ def ktmAgent(state: AgentState):
     return {"checkKTM": state["checkKTM"]}
 
 
+
 @time_check
 def incompleteInfoKTMAgent(state: AgentState):
     info = "\n--- Incomplete Info KTM ---"
@@ -349,6 +396,7 @@ def incompleteInfoKTMAgent(state: AgentState):
     state["responseIncompleteNim"] = response
     # print(state["responseIncompleteNim"])
     return {"answerAgents": [agentOpinion]}
+
 
 
 @time_check
@@ -377,6 +425,7 @@ def infoKTMAgent(state: AgentState):
     return {"answerAgents": [agentOpinion]}
 
 
+
 @time_check
 def outOfContextAgent(state: AgentState):
     info = "\n--- OUT OF CONTEXT ---"
@@ -394,12 +443,73 @@ def outOfContextAgent(state: AgentState):
     return {"answerAgents": [agentOpinion]}
 
 
+
+@time_check
+def accountAgent(state: AgentState):
+    info = "\n--- ACCOUNT ---"
+    print(info)
+
+    ACCOUNT_PROMPT = """
+        Anda adalah seorang admin dari sistem akun Undiksha (Universitas Pendidikan Ganesha).
+        Tugas Anda adalah mengklasifikasikan jenis pertanyaan.
+        Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
+        Ada 2 konteks pertanyaan yang diajukan:
+        - TRUE - Jika pengguna menyertakan email dengan domain @undiksha.ac.id atau @student.undiksha.ac.id dan mengatakan status sudah login atau belum di gmail google.
+        - FALSE - Jika pengguna tidak menyertakan email dengan domain @undiksha.ac.id atau @student.undiksha.ac.id dan belum mengatakan status sudah login atau belum di gmail google.
+        Hasilkan hanya 1 sesuai kata (TRUE, FALSE).
+    """
+    messages = [
+        SystemMessage(content=ACCOUNT_PROMPT),
+        HumanMessage(content=state["accountQuestion"])
+    ]
+    response = chat_openai(messages).strip().lower()
+
+    is_complete = response == "true"
+    state["checkAccount"] = is_complete
+    state["finishedAgents"].add("account_agent") 
+    print(f"Info Account Lengkap? {is_complete}")
+    return {"checkAccount": state["checkAccount"]}
+
+
+
+@time_check
+def resetAccountAgent(state: AgentState):
+    info = "\n--- Reset Account ---"
+    print(info)
+
+    answer = "Proses reset password berhasil, silahkan cek email anda dan klik link reset passwordnya"
+    agentOpinion = {
+        "answer": answer
+    }
+    state["finishedAgents"].add("resetAccount_agent") 
+    return {"answerAgents": [agentOpinion]}
+
+
+
+@time_check
+def incompleteAccountAgent(state: AgentState):
+    info = "\n--- Incomplete Account ---"
+    print(info)
+
+    answer = "Tanyakan apakah akun undiksha tersebut sudah diloginkan di perangkatnya?"
+    agentOpinion = {
+        "answer": answer
+    }
+    state["finishedAgents"].add("incompleteAccount_agent") 
+    return {"answerAgents": [agentOpinion]}
+
+
+
 @time_check
 def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
     if "general_agent" in state["finishedAgents"]:
         total_agents =+ 3
+    if "news_agent" in state["finishedAgents"]:
+        total_agents += 1
+    if "account_agent" in state["finishedAgents"]:
+        total_agents += 2
     if "kelulusan_agent" in state["finishedAgents"]:
         total_agents += 2
     if "ktm_agent" in state["finishedAgents"]:
@@ -438,6 +548,7 @@ def resultWriterAgent(state: AgentState):
     return {"responseFinal": state["responseFinal"]}
 
 
+
 @time_check
 def build_graph(question):
     workflow = StateGraph(AgentState)
@@ -463,6 +574,27 @@ def build_graph(question):
                 False: "resultWriter_agent",
             }
         )
+
+    if "news_agent" in context:
+        workflow.add_node("news_agent", newsAgent)
+        workflow.add_edge("questionIdentifier_agent", "news_agent")
+        workflow.add_edge("news_agent", "resultWriter_agent")
+
+    if "account_agent" in context:
+        workflow.add_node("account_agent", accountAgent)
+        workflow.add_node("resetAccount_agent", resetAccountAgent)
+        workflow.add_node("incompleteAccount_agent", incompleteAccountAgent)
+        workflow.add_edge("questionIdentifier_agent", "account_agent")
+        workflow.add_conditional_edges(
+            "account_agent",
+            lambda state: state["checkAccount"],
+            {
+                True: "resetAccount_agent",
+                False: "incompleteAccount_agent"
+            }
+        )
+        workflow.add_edge("resetAccount_agent", "resultWriter_agent")
+        workflow.add_edge("incompleteAccount_agent", "resultWriter_agent")
 
     if "kelulusan_agent" in context:
         workflow.add_node("kelulusan_agent", kelulusanAgent)
@@ -511,10 +643,11 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?")
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
 # build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa bupati buleleng?")
+build_graph("saya ingin reset password sso e-ganesha email gelgel.abdiutama@undiksha.ac.id sudah login")

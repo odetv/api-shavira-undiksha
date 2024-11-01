@@ -1,5 +1,5 @@
 import time
-from src.models import AgentState
+from utils.agent_state import AgentState
 
 
 def time_check(func):

@@ -29,15 +29,14 @@ def questionIdentifierAgent(state: AgentState):
         Anda adalah seoarang pemecah pertanyaan pengguna.
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
-        Ada 6 konteks diajukan:
-        - GENERAL_AGENT - Berkaitan dengan informasi Undiksha baik informasi umum undiksha, informasi akademik, informasi mahasiswa, dan jika ada yang bertanya tentang dirimu atau sapaan.
-        - NEWS_AGENT - Berkaitan berita-berita terbaru di Universitas pendidikan Ganesha.
+        Ada 5 konteks diajukan:
+        - GENERAL_AGENT - Berkaitan dengan segala informasi umum dan jika ada yang bertanya tentang dirimu atau sapaan.
+        - NEWS_AGENT - Hanya jika pertanyaan mengandung kata "berita" atau "news".
         - ACCOUNT_AGENT - Bekaitan dengan reset ulang password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
         - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha, biasanya pertanyaan pengguna berisi Nomor Induk Mahasiswa (NIM).
-        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
-        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "pertanyaan relevan terkait news", "ACCOUNT_AGENT": "pertanyaan relevan terkait akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm", "OUTOFCONTEXT_AGENT": "pertanyaan relevan terkait out of context"}) begitu seterusnya.
+        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "hanya jika pertanyaan mengandung kata "berita" atau "news"", "ACCOUNT_AGENT": "pertanyaan relevan terkait akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm"}) begitu seterusnya.
         Buat dengan format data JSON tanpa membuat key baru.
     """
     messagesTypeQuestion = [
@@ -65,20 +64,17 @@ def questionIdentifierAgent(state: AgentState):
     account_question_match = re.search(r'"account_agent"\s*:\s*"([^"]*)"', cleaned_response)
     kelulusan_question_match = re.search(r'"kelulusan_agent"\s*:\s*"([^"]*)"', cleaned_response)
     ktm_question_match = re.search(r'"ktm_agent"\s*:\s*"([^"]*)"', cleaned_response)
-    out_of_context_question_match = re.search(r'"outofcontext_agent"\s*:\s*"([^"]*)"', cleaned_response)
 
     state["generalQuestion"] = general_question_match.group(1) if general_question_match and general_question_match.group(1) else "Tidak ada informasi"
     state["newsQuestion"] = news_question_match.group(1) if news_question_match and news_question_match.group(1) else "Tidak ada informasi"
     state["accountQuestion"] = account_question_match.group(1) if account_question_match and account_question_match.group(1) else "Tidak ada informasi"
     state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
     state["ktmQuestion"] = ktm_question_match.group(1) if ktm_question_match and ktm_question_match.group(1) else "Tidak ada informasi"
-    state["outOfContextQuestion"] = out_of_context_question_match.group(1) if out_of_context_question_match and out_of_context_question_match.group(1) else "Tidak ada informasi"
     print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
     print(f"Debug: State 'newsQuestion' setelah update: {state['newsQuestion']}")
     print(f"Debug: State 'accountQuestion' setelah update: {state['accountQuestion']}")
     print(f"Debug: State 'kelulusanQuestion' setelah update: {state['kelulusanQuestion']}")
     print(f"Debug: State 'ktmQuestion' setelah update: {state['ktmQuestion']}")
-    print(f"Debug: State 'outOfContextQuestion' setelah update: {state['outOfContextQuestion']}")
 
     return state
 
@@ -586,24 +582,6 @@ def infoKTMAgent(state: AgentState):
 
 
 @time_check
-def outOfContextAgent(state: AgentState):
-    info = "\n--- OUT OF CONTEXT ---"
-    print(info)
-
-    response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
-
-    agentOpinion = {
-        "answer": response
-    }
-
-    state["finishedAgents"].add("outofcontext_agent")
-    state["responseOutOfContext"] = response
-    # print(state["responseOutOfContext"])
-    return {"answerAgents": [agentOpinion]}
-
-
-
-@time_check
 def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
@@ -617,8 +595,6 @@ def resultWriterAgent(state: AgentState):
         total_agents += 2
     if "ktm_agent" in state["finishedAgents"]:
         total_agents += 2
-    if "outofcontext_agent" in state["finishedAgents"]:
-        total_agents += 1
     
     print(f"DEBUG: finishedAgents = {state['finishedAgents']}")
     print(f"DEBUG: expected_agents_count = {expected_agents_count}, total_agents = {total_agents}")
@@ -734,11 +710,6 @@ def build_graph(question):
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
-    if "outofcontext_agent" in context:
-        workflow.add_node("outofcontext_agent", outOfContextAgent)
-        workflow.add_edge("questionIdentifier_agent", "outofcontext_agent")
-        workflow.add_edge("outofcontext_agent", "resultWriter_agent")
-
     workflow.add_edge("resultWriter_agent", END)
     graph = workflow.compile()
     result = graph.invoke({"question": question})
@@ -756,4 +727,4 @@ def build_graph(question):
 # build_graph("Saya ingin cetak ktm 2115101014.")
 # build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa bupati buleleng?")
-build_graph("kamu siapa?")
+# build_graph("kapan jadwal snbp?")

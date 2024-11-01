@@ -1,8 +1,7 @@
+.pytest_cache
 __pycache__
-venv
-shavira-env
-venv-shavira
 eval/.deepeval
 eval/.deepeval-cache.json
-*.json
+src/vectordb
+venv
 .env

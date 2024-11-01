@@ -3,7 +3,7 @@ import os
 import requests
 from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.state_models import AgentState
+from utils.agent_state import AgentState
 from datetime import datetime
 
 

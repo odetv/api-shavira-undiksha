@@ -30,13 +30,13 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 5 konteks diajukan:
-        - GENERAL_AGENT - Berkaitan dengan segala informasi umum dan jika ada yang bertanya tentang dirimu atau sapaan.
+        - GENERAL_AGENT - Berkaitan dengan segala informasi umum mahasiswa, dosen, pegawai, civitas akademika universitas dll dan jika ada yang bertanya tentang dirimu atau sapaan.
         - NEWS_AGENT - Hanya jika pertanyaan mengandung kata "berita" atau "news".
         - ACCOUNT_AGENT - Bekaitan dengan reset ulang lupa password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha, jika hanya masalah cara merubah password itu masuk ke general.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
-        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha, biasanya pertanyaan pengguna berisi Nomor Induk Mahasiswa (NIM).
+        - KTM_AGENT - Hanya jika pertanyaan mengandung kata "ktm" atau "nim". Jika menyebutkan "nip" maka itu general.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
-        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "hanya jika pertanyaan mengandung kata "berita" atau "news"", "ACCOUNT_AGENT": "pertanyaan relevan terkait lupa password akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm"}).
+        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "hanya jika pertanyaan mengandung kata "berita" atau "news"", "ACCOUNT_AGENT": "pertanyaan relevan terkait lupa password akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "hanya jika pertanyaan mengandung kata "ktm" atau "nim"."}).
         Buat dengan format data JSON tanpa membuat key baru.
     """
     messagesTypeQuestion = [
@@ -86,7 +86,7 @@ def generalAgent(state: AgentState):
     print(info)
 
     VECTOR_PATH = "src/vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["generalQuestion"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -95,7 +95,7 @@ def generalAgent(state: AgentState):
 
     state["generalContext"] = context
     state["finishedAgents"].add("general_agent")
-    # print(state["generalContext"])
+    print("DEBUG:GENERALCONTEXT:::", state["generalContext"])
     return {"generalContext": state["generalContext"]}
 
 
@@ -123,7 +123,7 @@ def graderDocsAgent(state: AgentState):
 
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderDocs_agent")
-    # print(state["generalGraderDocs"])
+    print("DEBUG:GENERALGRADER:::", state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
 
@@ -720,4 +720,5 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+build_graph("NIP Made Windu Antara Kesiman, S.T., M.Sc.")
+# build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")

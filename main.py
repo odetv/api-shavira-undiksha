@@ -1,9 +1,11 @@
 import json
+import os
 import re
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
+from dotenv import load_dotenv
 from utils.agent_state import AgentState
 from utils.llm import chat_openai, chat_ollama, chat_groq
 from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
@@ -12,6 +14,11 @@ from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 from utils.scrapper_rss import scrap_news
 
+
+
+load_dotenv()
+DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
+VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
 
 
 
@@ -85,13 +92,19 @@ def generalAgent(state: AgentState):
     info = "\n--- GENERAL ---"
     print(info)
 
-    VECTOR_PATH = "src/vectordb"
+    VECTOR_PATH = VECTORDB_DIR
     MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["generalQuestion"]
-    vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
-    retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
-    context = "\n\n".join([doc.page_content for doc, _score in retriever])
+    try:
+        vectordb = FAISS.load_local(VECTOR_PATH, EMBEDDER, allow_dangerous_deserialization=True)
+        retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
+        context = "\n\n".join([doc.page_content for doc, _score in retriever])
+    except RuntimeError as e:
+        if "could not open" in str(e):
+            raise RuntimeError("Vector database FAISS index file not found. Please ensure the index file exists at the specified path.")
+        else:
+            raise
 
     state["generalContext"] = context
     state["finishedAgents"].add("general_agent")
@@ -720,5 +733,4 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-build_graph("NIP Made Windu Antara Kesiman, S.T., M.Sc.")
 # build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")

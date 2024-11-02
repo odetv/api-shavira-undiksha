@@ -45,6 +45,7 @@ CONTEXT_ABBREVIATIONS = {
     "UPA TIK": "UPA TIK Undiksha",
     "UPT-TIK": "UPA TIK Undiksha",
     "UPTTIK": "UPA TIK Undiksha",
+    "NIP": "Nomor Induk Pegawai (NIP)"
 }
 
 

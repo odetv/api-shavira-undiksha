@@ -1,4 +1,3 @@
-import json
 import os
 import re
 from langchain_openai import OpenAIEmbeddings
@@ -17,7 +16,6 @@ from utils.scrapper_rss import scrap_news
 
 
 load_dotenv()
-DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
 VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
 
 

@@ -23,7 +23,7 @@ def setup_page():
     st.sidebar.write("Hai, selamat datang di Virtual Assistant Undiksha! Aku siap membantumu.")
     st.sidebar.markdown("""
     <p style="color:gray;">
-        <small>Developed by: <strong>I Gede Gelgel Abdiutama</strong></small><br>
+        <small>Developed by: <strong>Gelgel & Sudiartika</strong></small><br>
         <small>Support by: <strong>UPA TIK Undiksha</strong></small>
     </p>
     """, unsafe_allow_html=True)

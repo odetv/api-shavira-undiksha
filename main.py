@@ -179,6 +179,15 @@ def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Grader Hallucinations ---"
     print(info)
 
+    if "generalHallucinationCount" not in state:
+        state["generalHallucinationCount"] = 0
+    state["generalHallucinationCount"] += 1
+    print(f"DEBUG: Jumlah pengecekan halusinasi: {state['generalHallucinationCount']}")
+    if state["generalHallucinationCount"] > 3:
+        print("DEBUG: Batas pengecekan halusinasi tercapai, menghentikan loop.")
+        state["generalIsHallucination"] = False
+        return {"generalIsHallucination": state["generalIsHallucination"]}
+
     prompt = f"""
     Anda adalah seorang penilai dari OPINI dengan FAKTA.
     Berikan nilai "false" hanya jika OPINI ada kaitannya dengan FAKTA atau berikan nilai "true" hanya jika OPINI tidak ada kaitannya dengan FAKTA.
@@ -619,10 +628,8 @@ def resultWriterAgent(state: AgentState):
 
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
-        - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
-        - Diakhir beritahu bahwa Harap diperhatikan jawaban ini dihasilkan oleh AI, mungkin saja jawaban yang dihasilkan tidak sesuai.
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
@@ -725,9 +732,12 @@ def build_graph(question):
     graph = workflow.compile()
     result = graph.invoke({"question": question})
     response = result.get("responseFinal")
+    answers = result.get("responseFinal", [])
+    contexts = result.get("answerAgents", "")
+
     get_graph_image(graph)
 
-    return response
+    return response, answers, contexts
 
 
 # DEBUG QUERY EXAMPLES

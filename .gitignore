@@ -1,7 +1,4 @@
 .pytest_cache
 __pycache__
-eval/.deepeval
-eval/.deepeval-cache.json
-src/vectordb
 venv
 .env

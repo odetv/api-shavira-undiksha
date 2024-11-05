@@ -7,9 +7,9 @@ from main import build_graph
 
 
 EXAMPLE_QUESTIONS = [
-    "Bagaimana cara mendaftar di Undiksha? Ajarin saya dong.",
-    "Jalur masuk apa saja yang tersedia saat mendaftar di Undiksha?",
+    "Apa saja fasilitas yang disediakan oleh kampus undiksha?",
     "Dimana lokasi kampus Undiksha? Katanya ada juga di Denpasar.",
+    "Saya lupa password SSO, cara atasinya gimana?",
     "Saya ingin cek kelulusan pendaftaran di Undiksha.",
     "Bagaimana cara akses melihat Kartu Tanda Mahasiswa?"
 ]
@@ -23,16 +23,16 @@ def setup_page():
     st.sidebar.write("Hai, selamat datang di Virtual Assistant Undiksha! Aku siap membantumu.")
     st.sidebar.markdown("""
     <p style="color:gray;">
-        <small>Developed by: <strong>I Gede Gelgel Abdiutama</strong></small><br>
+        <small>Developed by: <strong>Gelgel & Sudiartika</strong></small><br>
         <small>Support by: <strong>UPA TIK Undiksha</strong></small>
     </p>
     """, unsafe_allow_html=True)
-    st.title("Ayo tanyakan padaku😊")
+    st.title("Tanya Shavira😊")
 
 
 def process_response(prompt):
     with st.spinner("Sedang memproses, harap tunggu..."):
-        response = build_graph(prompt)
+        _, response = build_graph(prompt)
         msg = re.sub(
             r'(https://aka\.undiksha\.ac\.id/api/ktm/generate/\S*)', 
             r'[Preview URL](\1)',

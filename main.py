@@ -1,4 +1,4 @@
-import json
+import os
 import re
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
@@ -11,7 +11,7 @@ from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 from utils.scrapper_rss import scrap_news
-
+from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
 
@@ -30,13 +30,13 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 5 konteks diajukan:
-        - GENERAL_AGENT - Berkaitan dengan segala informasi umum dan jika ada yang bertanya tentang dirimu atau sapaan.
+        - GENERAL_AGENT - Berkaitan dengan segala informasi umum mahasiswa, dosen, pegawai, civitas akademika universitas dll dan jika ada yang bertanya tentang dirimu atau sapaan.
         - NEWS_AGENT - Hanya jika pertanyaan mengandung kata "berita" atau "news".
         - ACCOUNT_AGENT - Bekaitan dengan reset ulang lupa password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha, jika hanya masalah cara merubah password itu masuk ke general.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
-        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha, biasanya pertanyaan pengguna berisi Nomor Induk Mahasiswa (NIM).
+        - KTM_AGENT - Hanya jika pertanyaan mengandung kata "ktm" atau "nim". Jika menyebutkan "nip" maka itu general.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
-        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "hanya jika pertanyaan mengandung kata "berita" atau "news"", "ACCOUNT_AGENT": "pertanyaan relevan terkait lupa password akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm"}).
+        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "hanya jika pertanyaan mengandung kata "berita" atau "news"", "ACCOUNT_AGENT": "pertanyaan relevan terkait lupa password akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "hanya jika pertanyaan mengandung kata "ktm" atau "nim"."}).
         Buat dengan format data JSON tanpa membuat key baru.
     """
     messagesTypeQuestion = [
@@ -85,17 +85,23 @@ def generalAgent(state: AgentState):
     info = "\n--- GENERAL ---"
     print(info)
 
-    VECTOR_PATH = "src/vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    VECTOR_PATH = VECTORDB_DIR
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["generalQuestion"]
-    vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
-    retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
-    context = "\n\n".join([doc.page_content for doc, _score in retriever])
+    try:
+        vectordb = FAISS.load_local(VECTOR_PATH, EMBEDDER, allow_dangerous_deserialization=True)
+        retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
+        context = "\n\n".join([doc.page_content for doc, _score in retriever])
+    except RuntimeError as e:
+        if "could not open" in str(e):
+            raise RuntimeError("Vector database FAISS index file not found. Please ensure the index file exists at the specified path.")
+        else:
+            raise
 
     state["generalContext"] = context
     state["finishedAgents"].add("general_agent")
-    # print(state["generalContext"])
+    print("DEBUG:GENERALCONTEXT:::", state["generalContext"])
     return {"generalContext": state["generalContext"]}
 
 
@@ -123,7 +129,7 @@ def graderDocsAgent(state: AgentState):
 
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderDocs_agent")
-    # print(state["generalGraderDocs"])
+    print("DEBUG:GENERALGRADER:::", state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
 
@@ -167,6 +173,15 @@ def answerGeneratorAgent(state: AgentState):
 def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Grader Hallucinations ---"
     print(info)
+
+    if "generalHallucinationCount" not in state:
+        state["generalHallucinationCount"] = 0
+    state["generalHallucinationCount"] += 1
+    print(f"DEBUG: Jumlah pengecekan halusinasi: {state['generalHallucinationCount']}")
+    if state["generalHallucinationCount"] > 3:
+        print("DEBUG: Batas pengecekan halusinasi tercapai, menghentikan loop.")
+        state["generalIsHallucination"] = False
+        return {"generalIsHallucination": state["generalIsHallucination"]}
 
     prompt = f"""
     Anda adalah seorang penilai dari OPINI dengan FAKTA.
@@ -608,10 +623,8 @@ def resultWriterAgent(state: AgentState):
 
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
-        - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
-        - Diakhir beritahu bahwa Harap diperhatikan jawaban ini dihasilkan oleh AI, mungkin saja jawaban yang dihasilkan tidak sesuai.
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
@@ -713,11 +726,18 @@ def build_graph(question):
     workflow.add_edge("resultWriter_agent", END)
     graph = workflow.compile()
     result = graph.invoke({"question": question})
-    response = result.get("responseFinal")
+    answers = result.get("responseFinal", [])
+    contexts = result.get("answerAgents", "")
+
     get_graph_image(graph)
 
-    return response
+    return contexts, answers
 
 
 # DEBUG QUERY EXAMPLES
-build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Siapa rektor undiksha?")
+# build_graph("Berita terbaru.")
+# build_graph("Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")

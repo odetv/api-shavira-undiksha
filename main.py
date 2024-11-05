@@ -4,7 +4,6 @@ from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
-from dotenv import load_dotenv
 from utils.agent_state import AgentState
 from utils.llm import chat_openai, chat_ollama, chat_groq
 from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
@@ -12,11 +11,7 @@ from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 from utils.scrapper_rss import scrap_news
-
-
-
-load_dotenv()
-VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
+from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
 
@@ -731,14 +726,18 @@ def build_graph(question):
     workflow.add_edge("resultWriter_agent", END)
     graph = workflow.compile()
     result = graph.invoke({"question": question})
-    response = result.get("responseFinal")
     answers = result.get("responseFinal", [])
     contexts = result.get("answerAgents", "")
 
     get_graph_image(graph)
 
-    return response, answers, contexts
+    return contexts, answers
 
 
 # DEBUG QUERY EXAMPLES
 # build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Siapa rektor undiksha?")
+# build_graph("Berita terbaru.")
+# build_graph("Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")
+# build_graph("Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")

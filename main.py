@@ -5,7 +5,7 @@ from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
 from utils.agent_state import AgentState
-from utils.llm import chat_openai, chat_ollama, chat_groq
+from utils.llm import chat_llm, embedder
 from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
@@ -43,7 +43,7 @@ def questionIdentifierAgent(state: AgentState):
         SystemMessage(content=promptTypeQuestion),
         HumanMessage(content=expanded_question),
     ]
-    responseTypeQuestion = chat_openai(messagesTypeQuestion).strip().lower()
+    responseTypeQuestion = chat_llm(messagesTypeQuestion).strip().lower()
     state["question_type"] = responseTypeQuestion
     print("\nPertanyaan:", expanded_question)
     print(f"question_type: {responseTypeQuestion}")
@@ -84,8 +84,7 @@ def generalAgent(state: AgentState):
     print(info)
 
     VECTOR_PATH = VECTORDB_DIR
-    MODEL_EMBEDDING = "text-embedding-3-large"
-    EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
+    _,EMBEDDER = embedder()
     question = state["generalQuestion"]
     try:
         vectordb = FAISS.load_local(VECTOR_PATH, EMBEDDER, allow_dangerous_deserialization=True)
@@ -123,7 +122,7 @@ def graderDocsAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["generalQuestion"]),
     ]
-    responseGraderDocsAgent = chat_openai(messages)
+    responseGraderDocsAgent = chat_llm(messages)
 
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderDocs_agent")
@@ -155,7 +154,7 @@ def answerGeneralAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["generalQuestion"])
     ]
-    response = chat_openai(messages)
+    response = chat_llm(messages)
     agentOpinion = {
         "answer": response
     }
@@ -184,7 +183,7 @@ def newsAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["newsQuestion"])
     ]
-    response = chat_openai(messages)
+    response = chat_llm(messages)
     
     agentOpinion = {
         "answer": response
@@ -214,7 +213,7 @@ def accountAgent(state: AgentState):
         SystemMessage(content=ACCOUNT_PROMPT),
         HumanMessage(content=state["accountQuestion"]),
     ]
-    response = chat_openai(messages).strip().lower()
+    response = chat_llm(messages).strip().lower()
     state["checkAccount"] = response
     state["finishedAgents"].add("account_agent") 
     print(f"Info Account Lengkap? {response}")
@@ -233,7 +232,7 @@ def accountAgent(state: AgentState):
         SystemMessage(content=promptParsingAccount),
         HumanMessage(content=state["accountQuestion"]),
     ]
-    responseParsingAccount = chat_openai(messagesParsingAccount).strip().lower()
+    responseParsingAccount = chat_llm(messagesParsingAccount).strip().lower()
 
     json_like_data = re.search(r'\{.*\}', responseParsingAccount, re.DOTALL)
     if json_like_data:
@@ -280,7 +279,7 @@ def resetAccountAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["accountQuestion"])
     ]
-    response = chat_openai(messages)
+    response = chat_llm(messages)
     agentOpinion = {
         "answer": response
     }
@@ -316,7 +315,7 @@ def incompleteAccountAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["accountQuestion"])
     ]
-    response = chat_openai(messages)
+    response = chat_llm(messages)
 
     agentOpinion = {
         "answer": response
@@ -343,7 +342,7 @@ def anomalyAccountAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["accountQuestion"])
     ]
-    response = chat_openai(messages)
+    response = chat_llm(messages)
 
     agentOpinion = {
         "answer": response
@@ -371,7 +370,7 @@ def kelulusanAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["kelulusanQuestion"]),
     ]
-    response = chat_openai(messages).strip().lower()
+    response = chat_llm(messages).strip().lower()
 
     noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["kelulusanQuestion"], re.IGNORECASE)
     tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)
@@ -486,7 +485,7 @@ def ktmAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["ktmQuestion"]),
     ]
-    response = chat_openai(messages).strip().lower()
+    response = chat_llm(messages).strip().lower()
 
     nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["ktmQuestion"], re.IGNORECASE)
     if nim_match:
@@ -577,7 +576,7 @@ def graderHallucinationsAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages).strip().lower()
+    response = chat_llm(messages).strip().lower()
     is_hallucination = response == "true"
 
     state["isHallucination"] = is_hallucination
@@ -631,7 +630,7 @@ def resultWriterAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_llm(messages)
 
     state["responseFinal"] = response
     return {"responseFinal": state["responseFinal"]}

@@ -28,3 +28,4 @@ beautifulsoup4
 ragas
 openpyxl
 xlsxwriter
+python-multipart

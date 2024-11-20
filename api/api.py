@@ -94,7 +94,7 @@ tags_metadata = [
 # Initialize FastAPI
 app = FastAPI(
     openapi_tags=tags_metadata,
-    title="Shavira",
+    title="API Shavira Undiksha",
     summary="API Shavira (Ganesha Virtual Assistant) Undiksha",
     version="0.0.1",
     docs_url="/docs",
@@ -127,10 +127,12 @@ async def root(request_http: Request, token: str = Depends(verify_bearer_token))
         "success": True,
         "description": "API Virtual Assistant Undiksha "+datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
-    return {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "message": "API Virtual Assistant Undiksha"
-    }
+    return api_response(
+        status_code=200,
+        success=True,
+        message="OK",
+        data={"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "description": "API Virtual Assistant Undiksha"}
+    )
 
 
 # Endpoint untuk melihat daftar file (List)

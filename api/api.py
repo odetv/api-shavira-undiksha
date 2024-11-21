@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 from datetime import datetime
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -100,6 +101,16 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url=None,
     openapi_url="/openapishavira.json"
+)
+
+
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -647,4 +658,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # RUNNING API
-# uvicorn api.api:app --reload --port 1480
+# uvicorn api.api:app --reload --port 3001

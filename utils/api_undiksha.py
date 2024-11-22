@@ -8,6 +8,10 @@ from datetime import datetime
 
 
 load_dotenv()
+API_SSO_UNDIKSHA_AUTH_URL = os.getenv("API_SSO_UNDIKSHA_AUTH_URL")
+API_SSO_UNDIKSHA_USERNAME = os.getenv("API_SSO_UNDIKSHA_USERNAME")
+API_SSO_UNDIKSHA_PASSWORD = os.getenv("API_SSO_UNDIKSHA_PASSWORD")
+API_SSO_UNDIKSHA_RESPONSE_URL = os.getenv("API_SSO_UNDIKSHA_RESPONSE_URL")
 API_KTM_UNDIKSHA_AUTH_URL = os.getenv("API_KTM_UNDIKSHA_AUTH_URL")
 API_KTM_UNDIKSHA_USERNAME = os.getenv("API_KTM_UNDIKSHA_USERNAME")
 API_KTM_UNDIKSHA_PASSWORD = os.getenv("API_KTM_UNDIKSHA_PASSWORD")
@@ -20,6 +24,24 @@ API_KELULUSAN_UNDIKSHA_RESPONSE_URL = os.getenv("API_KELULUSAN_UNDIKSHA_RESPONSE
 
 def get_current_year():
     return datetime.now().year
+
+
+def get_auth_token_sso():
+    body = {
+        "username": API_SSO_UNDIKSHA_USERNAME,
+        "secret": API_SSO_UNDIKSHA_PASSWORD
+    }
+    try:
+        response = requests.post(API_SSO_UNDIKSHA_AUTH_URL, data=body)
+        response.raise_for_status()
+        # print("Respon autentikasi:", response.text)
+        result = response.json()
+        if result["token"] == result["token"]:
+            return result["token"]
+        else:
+            raise Exception(f"Autentikasi gagal: {result['message']}")
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
 
 
 def get_auth_token_ktm():
@@ -38,7 +60,7 @@ def get_auth_token_ktm():
             raise Exception(f"Autentikasi gagal: {result['message']}")
     except requests.exceptions.RequestException as e:
         raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
-    
+
 
 def get_auth_token_kelulusan():
     body = {
@@ -58,6 +80,36 @@ def get_auth_token_kelulusan():
         raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
 
 
+def show_reset_sso(state: AgentState):
+    emailAccountUser = state.get("emailAccountUser")
+    token = get_auth_token_sso()
+    headers = {
+        "Authorization": token,
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    body = {
+        "email": emailAccountUser
+    }
+    try:
+        response = requests.post(API_SSO_UNDIKSHA_RESPONSE_URL, headers=headers, data=body)
+        response.raise_for_status()
+        result = response.json()
+        if result["status"] == 1:
+            return {
+                "email": result["data"]["email"],
+                "tipe_user": result["data"]["tipe_user"],
+                "is_email_sent": result["data"]["is_email_sent"]
+            }
+        else:
+            # raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
+            return f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}"
+    except requests.exceptions.RequestException as e:
+        # if e.response is not None:
+        # print("Detail kesalahan:", e.response.text)
+        # raise SystemExit(f"Terjadi kesalahan saat mengakses API SSO: {e}")
+        return f"Detail kesalahan: {e.response.text}"
+
+
 def show_ktm_mhs(state: AgentState):
     id_nim_mhs = state.get("idNIMMhs")
     token = get_auth_token_ktm()
@@ -72,7 +124,10 @@ def show_ktm_mhs(state: AgentState):
         state["urlKTMMhs"] = url_ktm_mhs
         return url_ktm_mhs
     except requests.exceptions.RequestException as e:
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API KTM: {e}")
+        # if e.response is not None:
+        # print("Detail kesalahan:", e.response.text)
+        # raise SystemExit(f"Terjadi kesalahan saat mengakses API KTM: {e}")
+        return f"Detail kesalahan: {e.response.text}"
 
 
 def show_kelulusan_pmb(state: AgentState):
@@ -80,18 +135,15 @@ def show_kelulusan_pmb(state: AgentState):
     tglLahirPendaftar = state.get("tglLahirPendaftar")
     token = get_auth_token_kelulusan()
     tahun = get_current_year()
-    
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/x-www-form-urlencoded"
     }
-
     body = {
         "tahun": tahun,
         "no-pendaftaran": noPendaftaran,
         "tgl-lahir": tglLahirPendaftar
     }
-
     try:
         response = requests.post(API_KELULUSAN_UNDIKSHA_RESPONSE_URL, headers=headers, data=body)
         response.raise_for_status()
@@ -106,19 +158,19 @@ def show_kelulusan_pmb(state: AgentState):
                 "program_studi": data_siswa["program_studi"],
                 "status_kelulusan": data_siswa["status_kelulusan"]
             }
-            # print(f"Informasi Kelulusan: {informasi_kelulusan}")
             return informasi_kelulusan
         else:
-            raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
-    
+            # raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
+            return f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}"
     except requests.exceptions.RequestException as e:
-        if e.response is not None:
-            print("Detail kesalahan:", e.response.text)
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API kelulusan: {e}")
-        # return "Maaf sedang terjadi kesalahan pada sistem."
+        # if e.response is not None:
+        # print("Detail kesalahan:", e.response.text)
+        # raise SystemExit(f"Terjadi kesalahan saat mengakses API Kelulusan: {e}")
+        return f"Detail kesalahan: {e.response.text}"
 
 
 
 # DEBUG AUTH
+# print(get_auth_token_sso())
 # print(get_auth_token_ktm())
 # print(get_auth_token_kelulusan())

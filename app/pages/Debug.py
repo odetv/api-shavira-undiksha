@@ -1,10 +1,13 @@
 import os
+import sys
+import os
 import streamlit as st
 import pandas as pd
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage, SystemMessage
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.llm import chat_llm, embedder
 from dotenv import load_dotenv
 from src.config.config import DATASETS_DIR, VECTORDB_DIR

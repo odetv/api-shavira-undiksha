@@ -8,3 +8,13 @@ services:
       - "3001:3001"
     volumes:
       - .:/app
+
+  streamlit:
+    build: .
+    command: streamlit run app/Home.py --server.port 3003 --server.address 0.0.0.0
+    env_file:
+      - .env
+    ports:
+      - "3003:3003"
+    volumes:
+      - .:/app

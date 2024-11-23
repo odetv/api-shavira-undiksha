@@ -16,7 +16,7 @@ STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
 
 def setup_page():
     st.set_page_config(layout="wide", page_title="Debug - Shavira Undiksha", page_icon="assets/images/logo.png")
-    st.sidebar.image("assets\images\logo.png")
+    st.sidebar.image("assets/images/logo.png")
     st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant Shavira Undiksha")
     with st.sidebar:
         "[Source Code](https://github.com/odetv/va-shavira-undiksha)"

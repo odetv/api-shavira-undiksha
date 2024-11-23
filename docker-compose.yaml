@@ -6,6 +6,7 @@ services:
       - .env
     ports:
       - "3001:3001"
+    restart: always
     volumes:
       - .:/app
   streamlit:
@@ -15,5 +16,6 @@ services:
       - .env
     ports:
       - "3003:3003"
+    restart: always
     volumes:
       - .:/app

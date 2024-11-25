@@ -5,30 +5,28 @@ from utils.debug_time import time_check
 from utils.scrapper_rss import scrap_news
 
 
-class NewsAgent:
-    @time_check
-    @staticmethod
-    def newsAgent(state: AgentState):
-        info = "\n--- News ---"
-        print(info)
+@time_check
+def newsAgent(state: AgentState):
+    info = "\n--- News ---"
+    print(info)
 
-        result = scrap_news()
-        state["newsScrapper"] = result
+    result = scrap_news()
+    state["newsScrapper"] = result
 
-        prompt = f"""
-            Anda adalah seorang pengelola berita.
-            Berikut berita yang terbaru saat ini.
-            - Data Berita: {state["newsScrapper"]}
-        """
+    prompt = f"""
+        Anda adalah seorang pengelola berita.
+        Berikut berita yang terbaru saat ini.
+        - Data Berita: {state["newsScrapper"]}
+    """
 
-        messages = [
-            SystemMessage(content=prompt),
-            HumanMessage(content=state["newsQuestion"])
-        ]
-        response = chat_llm(messages)
-        
-        agentOpinion = {
-            "answer": response
-        }
-        state["finishedAgents"].add("news_agent")
-        return {"answerAgents": [agentOpinion]}
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["newsQuestion"])
+    ]
+    response = chat_llm(messages)
+    
+    agentOpinion = {
+        "answer": response
+    }
+    state["finishedAgents"].add("news_agent")
+    return {"answerAgents": [agentOpinion]}

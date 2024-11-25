@@ -6,8 +6,8 @@ Ganesha Virtual Assistant (Shavira) adalah virtual assistant berbasis teknologi 
 
 ## Apa itu RAG?
 
-![image](assets/images/rag.png)
-![image](assets/images/adaptive-rag.jpg)
+![image](public/images/rag.png)
+![image](public/images/adaptive-rag.jpg)
 Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, chatbot dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
 
 ## Alur Kerja RAG
@@ -27,7 +27,7 @@ Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningka
 
 ## Contoh Implementasi
 
-![image](assets/images/graph.png)
+![image](public/images/graph.png)
 Pertanyaan Pengguna (Kueri) "Apa syarat untuk mendaftar sebagai mahasiswa baru di Undiksha?"
 
 #### 1. Retrieve
@@ -103,7 +103,7 @@ Jalankan dengan API (Dokumentasi: `/docs` atau `/openapishavira.json`)
 ```
 
 Contoh Pertanyaan
-[example_question.txt](example_question.txt)
+[example_question.txt](public/etc/example_question.txt)
 
 ## Struktur Project
 
@@ -120,10 +120,15 @@ va-shavira-undiksha
 │  ├─ pages
 │  │  └─ Debug.py
 │  └─ Home.py
-├─ assets
+├─ public
+│  ├─ etc
+│  │  └─ example_question.txt
 │  └─ images
 │     └─ Images.jpg
 ├─ src
+│  ├─ agents
+│  │  ├─ __init__.py
+│  │  └─ agents.py
 │  ├─ config
 │  │  └─ config.py
 │  ├─ datasets
@@ -158,9 +163,11 @@ va-shavira-undiksha
 │  ├─ raw_process.py
 │  ├─ scrapper_datasets.py
 │  └─ scrapper_rss.py
+├─ .dockerignore
 ├─ .env.example
 ├─ .gitignore
-├─ example_question.txt
+├─ docker-compose.yaml
+├─ Dockerfile
 ├─ main.py
 ├─ README.md
 └─ requirements.txt

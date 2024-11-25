@@ -1,6 +1,7 @@
 from utils.agent_state import AgentState
 from utils.debug_time import time_check
 
+
 class IncompleteInfoKTMAgent:
     @time_check
     @staticmethod

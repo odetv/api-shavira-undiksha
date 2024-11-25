@@ -1,15 +1,7 @@
-import re
 from langgraph.graph import END, START, StateGraph
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_community.vectorstores import FAISS
 from utils.agent_state import AgentState
-from utils.llm import chat_llm, embedder
-from utils.api_undiksha import show_reset_sso, show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
-from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
-from utils.scrapper_rss import scrap_news
-from src.config.config import VECTORDB_DIR
 from src.agents import *
 
 
@@ -109,6 +101,3 @@ def build_graph(question):
 
 # DEBUG QUERY EXAMPLES
 # build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")
-# build_graph("Saya lupa password sso sudiartika@undiksha.ac.id sudah ada akun google di hp.")
-# build_graph("Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")
-build_graph("Cetak ktm 1234567890")

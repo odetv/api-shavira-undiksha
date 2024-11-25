@@ -5,6 +5,7 @@ from utils.llm import chat_llm
 from utils.api_undiksha import show_kelulusan_pmb
 from utils.debug_time import time_check
 
+
 class InfoKelulusanAgent:
     @time_check
     @staticmethod
@@ -43,7 +44,7 @@ class InfoKelulusanAgent:
             return {"answerAgents": [agentOpinion]}
 
         except Exception as e:
-            print("Error retrieving graduation information:", e)
+            # print("Error retrieving graduation information:", e)
             prompt = f"""
                 Anda adalah seorang pengirim pesan informasi Undiksha.
                 Tugas Anda untuk memberitahu pengguna bahwa:

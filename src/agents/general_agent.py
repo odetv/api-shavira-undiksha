@@ -4,6 +4,7 @@ from langchain_community.vectorstores import FAISS
 from utils.llm import embedder
 from src.config.config import VECTORDB_DIR
 
+
 class GeneralAgent:
     @time_check
     @staticmethod
@@ -26,5 +27,4 @@ class GeneralAgent:
 
         state["generalContext"] = context
         state["finishedAgents"].add("general_agent")
-        print("DEBUG:GENERALCONTEXT:::", state["generalContext"])
         return {"generalContext": state["generalContext"]}

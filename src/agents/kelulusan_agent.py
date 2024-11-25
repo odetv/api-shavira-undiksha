@@ -4,6 +4,7 @@ from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
 
+
 class KelulusanAgent:
     @time_check
     @staticmethod
@@ -28,9 +29,6 @@ class KelulusanAgent:
 
         noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["kelulusanQuestion"], re.IGNORECASE)
         tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)
-
-        print(noPendaftaran_match)
-        print(tglLahirPendaftar_match)
 
         if noPendaftaran_match and tglLahirPendaftar_match:
             state["noPendaftaran"] = noPendaftaran_match.group(1)

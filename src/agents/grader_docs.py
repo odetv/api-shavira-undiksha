@@ -12,13 +12,13 @@ class GraderDocsAgent:
         print(info)
 
         prompt = f"""
-        Anda adalah seorang pemilih konteks handal.
-        - Ambil informasi yang hanya berkaitan dengan pertanyaan.
-        - Pastikan informasi yang diambil lengkap sesuai konteks yang diberikan.
-        - Jangan mengurangi atau melebihi konteks yang diberikan.
-        - Format nya gunakan sesuai format konteks yang dberikan, jangan dirubah.
-        - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
-        Konteks: {state["generalContext"]}
+            Anda adalah seorang pemilih konteks handal.
+            - Ambil informasi yang hanya berkaitan dengan pertanyaan.
+            - Pastikan informasi yang diambil lengkap sesuai konteks yang diberikan.
+            - Jangan mengurangi atau melebihi konteks yang diberikan.
+            - Format nya gunakan sesuai format konteks yang dberikan, jangan dirubah.
+            - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
+            Konteks: {state["generalContext"]}
         """
 
         messages = [
@@ -29,7 +29,6 @@ class GraderDocsAgent:
 
         state["generalGraderDocs"] = responseGraderDocsAgent
         state["finishedAgents"].add("graderDocs_agent")
-        print("DEBUG:GENERALGRADER:::", state["generalGraderDocs"])
         return {"generalGraderDocs": state["generalGraderDocs"]}
 
 

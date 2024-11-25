@@ -5,6 +5,7 @@ from utils.agent_state import AgentState
 from langchain_core.messages import HumanMessage, SystemMessage
 from utils.llm import chat_llm
 
+
 class QuestionIdentifierAgent:
     @staticmethod
     @time_check
@@ -17,7 +18,7 @@ class QuestionIdentifierAgent:
         expanded_question = query_expansion(cleaned_question, CONTEXT_ABBREVIATIONS)
         state["question"] = expanded_question
 
-        promptTypeQuestion = """
+        prompt = """
             Anda adalah seoarang pemecah pertanyaan pengguna.
             Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
             Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
@@ -32,7 +33,7 @@ class QuestionIdentifierAgent:
             Buat dengan format data JSON tanpa membuat key baru.
         """
         messagesTypeQuestion = [
-            SystemMessage(content=promptTypeQuestion),
+            SystemMessage(content=prompt),
             HumanMessage(content=expanded_question),
         ]
         responseTypeQuestion = chat_llm(messagesTypeQuestion).strip().lower()

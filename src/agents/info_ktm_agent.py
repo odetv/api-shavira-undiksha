@@ -3,6 +3,7 @@ from utils.agent_state import AgentState
 from utils.api_undiksha import show_ktm_mhs
 from utils.debug_time import time_check
 
+
 class InfoKTMAgent:
     @time_check
     @staticmethod

@@ -4,6 +4,7 @@ from utils.llm import chat_llm
 from utils.debug_time import time_check
 from utils.scrapper_rss import scrap_news
 
+
 class NewsAgent:
     @time_check
     @staticmethod
@@ -15,9 +16,9 @@ class NewsAgent:
         state["newsScrapper"] = result
 
         prompt = f"""
-        Anda adalah seorang pengelola berita.
-        Berikut berita yang terbaru saat ini.
-        - Data Berita: {state["newsScrapper"]}
+            Anda adalah seorang pengelola berita.
+            Berikut berita yang terbaru saat ini.
+            - Data Berita: {state["newsScrapper"]}
         """
 
         messages = [

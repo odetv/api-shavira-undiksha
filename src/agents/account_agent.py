@@ -11,19 +11,19 @@ class AccountAgent:
         info = "\n--- ACCOUNT ---"
         print(info)
 
-        ACCOUNT_PROMPT = """
+        prompt = """
             Anda adalah seorang admin dari sistem akun Undiksha (Universitas Pendidikan Ganesha).
             Tugas Anda adalah mengklasifikasikan jenis pertanyaan.
             Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
             Ada 3 konteks pertanyaan yang diajukan:
-            - RESET - Hanya jika terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id" dan terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email dan status).
-            - INCOMPLETE - Hanya jika tidak terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id", atau tidak terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email atau status), atau hanya jika ingin reset atau ubah password.
+            - RESET - Hanya jika terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id" dan sudah terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email dan status wajib disertakan, jika salah satu tidak disebutkan berarti incomplete).
+            - INCOMPLETE - Hanya jika tidak terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id", atau tidak terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email dan status wajib disertakan), atau hanya jika ingin reset atau ubah password.
             - ANOMALY - Hanya jika lupa email, tidak mengetahui status login dengan jelas, atau lupa akun Google nya.
             Hati-hati dengan domain email yang serupa atau mirip, pastikan benar-benar sesuai.
             Hasilkan hanya 1 kata yang paling sesuai (RESET, INCOMPLETE, ANOMALY).
         """
         messages = [
-            SystemMessage(content=ACCOUNT_PROMPT),
+            SystemMessage(content=prompt),
             HumanMessage(content=state["accountQuestion"]),
         ]
         response = chat_llm(messages).strip().lower()

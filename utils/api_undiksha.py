@@ -34,7 +34,7 @@ def get_auth_token_sso():
     try:
         response = requests.post(API_SSO_UNDIKSHA_AUTH_URL, data=body)
         response.raise_for_status()
-        print("Respon autentikasi:", response.text)
+        # print("Respon autentikasi:", response.text)
         result = response.json()
         if result["token"] == result["token"]:
             return result["token"]
@@ -105,7 +105,7 @@ def show_reset_sso(state: AgentState):
             return f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}"
     except requests.exceptions.RequestException as e:
         # if e.response is not None:
-        print("Detail kesalahan:", e.response.text)
+        # print("Detail kesalahan:", e.response.text)
         # raise SystemExit(f"Terjadi kesalahan saat mengakses API SSO: {e}")
         return f"Detail kesalahan: {e.response.text}"
 

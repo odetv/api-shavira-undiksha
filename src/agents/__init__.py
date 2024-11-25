@@ -14,4 +14,4 @@ from .ktm_agent import KtmAgent
 from .incomplete_info_ktm_agent import IncompleteInfoKTMAgent
 from .info_ktm_agent import InfoKTMAgent
 from .grader_hallucination_agent import GraderHallucinationsAgent
-from .result_writter_agent import ResultWriterAgent
+from .result_writer_agent import ResultWriterAgent

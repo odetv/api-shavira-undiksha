@@ -4,6 +4,7 @@ from utils.llm import chat_llm
 from utils.api_undiksha import show_reset_sso
 from utils.debug_time import time_check
 
+
 class ResetAccountAgent:
     @time_check
     @staticmethod
@@ -48,7 +49,7 @@ class ResetAccountAgent:
             return {"answerAgents": [agentOpinion]}
 
         except Exception as e:
-            print("Error retrieving account information:", e)
+            # print("Error retrieving account information:", e)
             prompt = f"""
                 Anda adalah seorang pengirim pesan informasi Undiksha.
                 Tugas Anda untuk memberitahu pengguna bahwa:

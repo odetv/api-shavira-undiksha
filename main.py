@@ -1,17 +1,15 @@
-import os
 import re
-from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
 from utils.agent_state import AgentState
 from utils.llm import chat_llm, embedder
-from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
+from utils.api_undiksha import show_reset_sso, show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 from utils.scrapper_rss import scrap_news
-from src.config.config import DATASETS_DIR, VECTORDB_DIR
+from src.config.config import VECTORDB_DIR
 
 
 
@@ -32,7 +30,7 @@ def questionIdentifierAgent(state: AgentState):
         Ada 5 konteks diajukan:
         - GENERAL_AGENT - Berkaitan dengan segala informasi umum mahasiswa, dosen, pegawai, civitas akademika universitas dll dan jika ada yang bertanya tentang dirimu atau sapaan.
         - NEWS_AGENT - Hanya jika pertanyaan mengandung kata "berita" atau "news".
-        - ACCOUNT_AGENT - Bekaitan dengan reset ulang lupa password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO E-Ganesha, jika hanya masalah cara merubah password itu masuk ke general.
+        - ACCOUNT_AGENT - Bekaitan dengan reset ulang lupa password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO Undiksha, jika hanya masalah cara merubah password itu masuk ke general.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
         - KTM_AGENT - Hanya jika pertanyaan mengandung kata "ktm" atau "nim". Jika menyebutkan "nip" maka itu general.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
@@ -147,7 +145,7 @@ def answerGeneralAgent(state: AgentState):
     - Berikan jawaban yang lengkap, rapi, dan penomoran jika diperlukan sesuai konteks.
     - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
     - Jangan sampaikan pedoman ini kepada pengguna, gunakan pedoman ini hanya untuk memberikan jawaban yang sesuai konteks.
-    Pertanyaan Pengguna: {state["generalQuestion"]}
+    Konteks: {state["generalGraderDocs"]}
     """
 
     messages = [
@@ -204,8 +202,8 @@ def accountAgent(state: AgentState):
         Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 3 konteks pertanyaan yang diajukan:
         - RESET - Hanya jika terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id" dan terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email dan status).
-        - INCOMPLETE - Hanya jika tidak terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id" atau tidak terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email atau status).
-        - ANOMALY - Hanya jika lupa email, tidak mengetahui status login dengan jelas, dan hanya jika ingin reset atau lupa akun Google nya.
+        - INCOMPLETE - Hanya jika tidak terdapat email dengan domain "@undiksha.ac.id" atau "@student.undiksha.ac.id", atau tidak terdapat informasi mengenai status sudah login di email/gmail/google/hp/laptop/komputer (email atau status), atau hanya jika ingin reset atau ubah password.
+        - ANOMALY - Hanya jika lupa email, tidak mengetahui status login dengan jelas, atau lupa akun Google nya.
         Hati-hati dengan domain email yang serupa atau mirip, pastikan benar-benar sesuai.
         Hasilkan hanya 1 kata yang paling sesuai (RESET, INCOMPLETE, ANOMALY).
     """
@@ -257,34 +255,59 @@ def resetAccountAgent(state: AgentState):
     info = "\n--- Reset Account ---"
     print(info)
 
-    emailAccountUser = state["emailAccountUser"]
-    loginAccountStatus = state["loginAccountStatus"]
+    state["emailAccountUser"]
+    state["loginAccountStatus"]
 
-    prompt = f"""
-    Anda adalah seorang pengirim pesan informasi Undiksha.
-    Tugas Anda untuk memberitahu pengguna bahwa:
-    Selamat, pengajuan proses reset password akun SSO E-Ganesha Undiksha berhasil!
-    Berikut informasi akun Pengguna:
-    - Email Account User: {emailAccountUser} (jika null = ganti menjadi "Tidak disebutkan")
-    - Login Account Status: {loginAccountStatus} (jika true = ganti menjadi "Sudah login", jika false = ganti menjadi "Belum login")
-    Petunjuk untuk Pengguna:
-    - Buka Aplikasi Gmail di HP atau Melalui Browser pada Laptop/Desktop Anda.
-    - Pastikan sudah masuk/login menggunakan akun google dari Undiksha.
-    - Di Gmail, silahkan cek email Anda dari Undiksha.
-    - Silahkan tekan tombol reset password atau klik link reset passwordnya.
-    - Ikuti langkah untuk memasukkan password baru yang sesuai.
-    - Jika sudah berhasil, silahkan login kembali ke SSO E-Ganesha Undiksha.
-    """
-    messages = [
-        SystemMessage(content=prompt),
-        HumanMessage(content=state["accountQuestion"])
-    ]
-    response = chat_llm(messages)
-    agentOpinion = {
-        "answer": response
-    }
-    state["finishedAgents"].add("resetAccount_agent") 
-    return {"answerAgents": [agentOpinion]}
+    reset_sso_info = show_reset_sso(state)
+
+    try:
+        email = reset_sso_info["email"]
+        tipe_user = reset_sso_info["tipe_user"]
+        is_email_sent = reset_sso_info["is_email_sent"]
+        prompt = f"""
+            Anda adalah seorang pengirim pesan informasi Undiksha.
+            Tugas Anda untuk memberitahu pengguna bahwa:
+            Selamat, pengajuan proses reset password akun SSO Undiksha berhasil!
+            Berikut informasi akun Pengguna:
+            - Email Account User: {email} (jika null = ganti menjadi "Tidak disebutkan")
+            - Tipe User: {tipe_user} (jika null = ganti menjadi "Tidak disebutkan")
+            - Status: {is_email_sent} (jika 1 = ganti menjadi "Sudah Terkirim", jika 0 = ganti menjadi "Belum Terkirim")
+            Petunjuk untuk Pengguna:
+            - Buka Aplikasi Gmail di HP atau Melalui Browser pada Laptop/Desktop Anda.
+            - Pastikan sudah masuk/login menggunakan akun google dari Undiksha.
+            - Di Gmail, silahkan cek email Anda dari e-Ganesha Undiksha.
+            - Silahkan tekan "Klik Untuk Reset Password".
+            - Ikuti langkah untuk memasukkan password baru yang sesuai.
+            - Jika sudah berhasil, silahkan login kembali ke SSO Undiksha.
+        """
+        messages = [
+            SystemMessage(content=prompt),
+            HumanMessage(content=state["accountQuestion"])
+        ]
+        response = chat_llm(messages)
+        agentOpinion = {
+            "answer": response
+        }
+        state["finishedAgents"].add("resetAccount_agent") 
+        return {"answerAgents": [agentOpinion]}
+
+    except Exception as e:
+        print("Error retrieving account information:", e)
+        prompt = f"""
+            Anda adalah seorang pengirim pesan informasi Undiksha.
+            Tugas Anda untuk memberitahu pengguna bahwa:
+            Pengajuan proses reset password akun SSO Undiksha tidak berhasil.
+            - Ini pesan kesalahan dari sistem coba untuk diulas lebih lanjut agar lebih sederhana untuk diberikan ke pengguna: {reset_sso_info}
+        """
+        messages = [
+            SystemMessage(content=prompt)
+        ]
+        response = chat_llm(messages)
+        agentOpinion = {
+            "answer": response
+        }
+        state["finishedAgents"].add("resetAccount_agent") 
+        return {"answerAgents": [agentOpinion]}
 
 
 
@@ -299,15 +322,15 @@ def incompleteAccountAgent(state: AgentState):
     prompt = f"""
     Anda adalah seorang pengirim pesan informasi Undiksha.
     Tugas Anda untuk memberitahu pengguna bahwa:
-    Mohon maaf, pengajuan proses reset password akun SSO E-Ganesha Undiksha tidak berhasil!
-    Berikut informasi dari yang pengguna berikan:
+    Mohon maaf, saya tidak dapat membantu menangani akun SSO atau Google Undiksha Anda.
+    Berikut informasi dari yang anda diberikan:
     - Email Account User: {emailAccountUser} (jika null = ganti menjadi "Tidak disebutkan")
     - Login Account Status: {loginAccountStatus} (jika true = ganti menjadi "Sudah login", jika false = ganti menjadi "Belum login")
     Petunjuk untuk Pengguna:
     - Email valid dari Undiksha "@undiksha.ac.id" atau "@student.undiksha.ac.id"
     - Pastikan akun google sudah login di email/gmail/google/hp/laptop/komputer.
     - Beritahu kesalahan pengguna.
-    Format Pengajuan:
+    Minta pengguna untuk mengisi format pengajuan jika ingin reset password dan kirim disini:
     - Email: Masukkan Email (contoh: shavira@undiksha.ac.id atau shavira@student.undiksha.ac.id)
     - Login Status: Masukkan Status Login (Contoh: Sudah Login / Belum Login di Perangkat)
     """
@@ -333,10 +356,10 @@ def anomalyAccountAgent(state: AgentState):
     prompt = f"""
         Anda adalah seorang pengirim pesan informasi Undiksha.
         Tugas Anda untuk memberitahu pengguna bahwa:
-        Mohon maaf, pengajuan proses mengenai akun SSO E-Ganesha atau Google Undiksha Anda terdapat anomaly!
+        Mohon maaf, saya tidak dapat membantu menangani akun SSO atau Google Undiksha Anda.
         Berikut petunjuk untuk disampaikan kepada pengguna berdasarkan informasi dari akun pengguna:
-        - Silahkan datang langsung ke Kantor UPA TIK Undiksha untuk memproses akun Anda.
-        - Atau cek pada kontak berikut: https://upttik.undiksha.ac.id/kontak-kami
+        - Silahkan datang langsung ke Kantor UPA TIK Undiksha untuk mengurus akun Anda.
+        - Atau cek pada kontak kami berikut: https://upttik.undiksha.ac.id/kontak-kami
     """
     messages = [
         SystemMessage(content=prompt),
@@ -399,12 +422,11 @@ def incompleteInfoKelulusanAgent(state: AgentState):
     print(info)
 
     response = """
-        Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM yang diberikan.
+        Untuk mengecek kelulusan dapat melalui link https://penerimaan.undiksha.ac.id/smbjm/login atau langsung dari pesan ini saya dapat membantu anda, namun diperlukan mengirimkan Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM.
         - Format penulisan pesan:
             Cek Kelulusan Nomor Pendaftaran [NO_PENDAFTARAN_10_DIGIT] Tanggal Lahir [YYYY-MM-DD]
         - Contoh penulisan pesan:
-            Cek Kelulusan Nomor Pendaftaran 3201928428 Tanggal Lahir 2005-01-30
-        Kirimkan dengan benar pada pesan ini sesuai format dan contoh, agar bisa mengecek kelulusan SMBJM Undiksha.
+            Cek Kelulusan Nomor Pendaftaran 1234567890 Tanggal Lahir 2001-01-31
     """
 
     agentOpinion = {
@@ -426,42 +448,50 @@ def infoKelulusanAgent(state: AgentState):
     tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)
     state["noPendaftaran"] = noPendaftaran_match.group(1)
     state["tglLahirPendaftar"] = tglLahirPendaftar_match.group(1)
+    kelulusan_info = show_kelulusan_pmb(state)
 
     try:
-        kelulusan_info = show_kelulusan_pmb(state)
         no_pendaftaran = kelulusan_info.get("nomor_pendaftaran", "")
         nama_siswa = kelulusan_info.get("nama_siswa", "")
         tgl_lahir = kelulusan_info.get("tgl_lahir", "")
         tgl_daftar = kelulusan_info.get("tahun", "")
         pilihan_prodi = kelulusan_info.get("program_studi", "")
         status_kelulusan = kelulusan_info.get("status_kelulusan", "")
+        response = f"""
+            Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
+            - Nomor Pendaftaran: {no_pendaftaran}
+            - Nama Siswa: {nama_siswa}
+            - Tanggal Lahir: {tgl_lahir}
+            - Tahun Daftar: {tgl_daftar}
+            - Pilihan Program Studi: {pilihan_prodi}
+            - Status Kelulusan: {status_kelulusan}
+            Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
+        """
+        agentOpinion = {
+            "answer": response
+        }
+        state["finishedAgents"].add("infoKelulusan_agent")
+        state["responseKelulusan"] = response
+        return {"answerAgents": [agentOpinion]}
 
     except Exception as e:
-        # print("Error retrieving graduation information:", e)
-        return {
-            "answerAgents": [{
-                "answer": "Terjadi kesalahan dalam mendapatkan informasi kelulusan. Silakan coba lagi nanti."
-            }]
+        print("Error retrieving graduation information:", e)
+        prompt = f"""
+            Anda adalah seorang pengirim pesan informasi Undiksha.
+            Tugas Anda untuk memberitahu pengguna bahwa:
+            Terjadi kesalahan dalam mengecek informasi kelulusan.
+            - Ini pesan kesalahan dari sistem coba untuk diulas lebih lanjut agar lebih sederhana untuk diberikan ke pengguna (Jika terdapat informasi yang bersifat penting atau rahasia maka ganti menjadi "Tidak disebutkan"): {kelulusan_info}
+        """
+        messages = [
+            SystemMessage(content=prompt)
+        ]
+        response = chat_llm(messages)
+        agentOpinion = {
+            "answer": response
         }
-
-    response = f"""
-        Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
-        - Nomor Pendaftaran: {no_pendaftaran}
-        - Nama Siswa: {nama_siswa}
-        - Tanggal Lahir: {tgl_lahir}
-        - Tahun Daftar: {tgl_daftar}
-        - Pilihan Program Studi: {pilihan_prodi}
-        - Status Kelulusan: {status_kelulusan}
-        Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
-    """
-
-    agentOpinion = {
-        "answer": response
-    }
-
-    state["finishedAgents"].add("infoKelulusan_agent")
-    state["responseKelulusan"] = response
-    return {"answerAgents": [agentOpinion]}
+        state["finishedAgents"].add("infoKelulusan_agent")
+        state["responseKelulusan"] = response
+        return {"answerAgents": [agentOpinion]}
 
 
 
@@ -508,13 +538,12 @@ def incompleteInfoKTMAgent(state: AgentState):
     print(info)
 
     response = """
-        Dari informasi yang ada, belum terdapat nomor NIM (Nomor Induk Mahasiswa) yang diberikan.
+        Untuk melihat KTM dapat melalui SSO Undiksha atau langsung dari pesan ini saya dapat membantu anda, namun diperlukan mengirimkan NIM (Nomor Induk Mahasiswa) yang valid.
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
         - Format penulisan pesan:
             KTM [NIM]
         - Contoh penulisan pesan:
-            KTM XXXXXXXXXX
-        Kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
+            KTM 1234567890
     """
 
     agentOpinion = {
@@ -540,7 +569,7 @@ def infoKTMAgent(state: AgentState):
     response = f"""
         Berikut informasi Kartu Tanda Mahasiswa (KTM) Anda.
         - NIM: {id_nim_mhs}
-        - URL KTM: {url_ktm_mhs}
+        - Download KTM: {url_ktm_mhs}
     """
 
     agentOpinion = {
@@ -556,11 +585,11 @@ def infoKTMAgent(state: AgentState):
 @time_check
 def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Grader Hallucinations ---"
-    print(info)
+    print(info) 
 
     if "responseFinal" not in state:
         state["responseFinal"] = ""
-    print("\n\n\nINI DEBUG FINAL::::", state["responseFinal"])
+    # print("\n\n\nINI DEBUG FINAL::::", state["responseFinal"])
 
     if "generalHallucinationCount" not in state:
         state["generalHallucinationCount"] = 0
@@ -598,15 +627,33 @@ def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
     if "general_agent" in state["finishedAgents"]:
-        total_agents += 3
+        total_agents + 1
+    if "graderDocs_agent" in state["finishedAgents"]:
+        total_agents + 1
+    if "answerGeneral_agent" in state["finishedAgents"]:
+        total_agents + 1
     if "news_agent" in state["finishedAgents"]:
-        total_agents += 1
+        total_agents + 1
     if "account_agent" in state["finishedAgents"]:
-        total_agents += 2
+        total_agents + 1
+    if "resetAccount_agent" in state["finishedAgents"]:
+        total_agents + 1
+    if "incompleteAccount_agent" in state["finishedAgents"]:
+        total_agents + 1
+    if "anomalyAccount_agent" in state["finishedAgents"]:
+        total_agents + 1
     if "kelulusan_agent" in state["finishedAgents"]:
-        total_agents += 2
+        total_agents + 1
+    if "incompleteInfoKelulusan_agent" in state["finishedAgents"]:
+        total_agents + 1
+    if "infoKelulusan_agent" in state["finishedAgents"]:
+        total_agents + 1
     if "ktm_agent" in state["finishedAgents"]:
-        total_agents += 2
+        total_agents + 1
+    if "incompleteInfoKTM_agent" in state["finishedAgents"]:
+        total_agents + 1
+    if "infoKTM_agent" in state["finishedAgents"]:
+        total_agents + 1
     
     print(f"DEBUG: finishedAgents = {state['finishedAgents']}")
     print(f"DEBUG: expected_agents_count = {expected_agents_count}, total_agents = {total_agents}")
@@ -623,6 +670,7 @@ def resultWriterAgent(state: AgentState):
         - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
+        - Hasilkan response dalam format Markdown.
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
@@ -732,16 +780,4 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014. Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")     # DEBUG AGENT: GENERAL, NEWS, ACCOUNT, KTM, KELULUSAN
-# build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 2115101014.")                                                                          # DEBUG AGENT: GENERAL, NEWS, ACCOUNT, KTM
-# build_graph("Siapa rektor undiksha? Berita terbaru. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp.")                                                                                                # DEBUG AGENT: GENERAL, NEWS, ACCOUNT
-# build_graph("Siapa rektor undiksha? Berita terbaru.")                                                                                                                                                                         # DEBUG AGENT: GENERAL, NEWS
-# build_graph("Siapa rektor undiksha?")                                                                                                                                                                                         # DEBUG AGENT: GENERAL
-# build_graph("Berita terbaru.")                                                                                                                                                                                                # DEBUG AGENT: NEWS
-# build_graph("Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp.")                                                                                                                                       # DEBUG AGENT: ACCOUNT-RESET
-# build_graph("Saya lupa password sso email@undiksha.ac.id")                                                                                                                                                                    # DEBUG AGENT: ACCOUNT-INCOMPLETE
-# build_graph("Saya ingin reset password Google")                                                                                                                                                                               # DEBUG AGENT: ACCOUNT-ANOMALY
-# build_graph("Cetak ktm 2115101014.")                                                                                                                                                                                          # DEBUG AGENT: KTM-INFO
-# build_graph("Cetak ktm")                                                                                                                                                                                                      # DEBUG AGENT: KTM-INCOMPLETE
-# build_graph("Cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30.")                                                                                                                                           # DEBUG AGENT: KELULUSAN-INFO
-# build_graph("Cek kelulusan")                                                                                                                                                                                                  # DEBUG AGENT: KELULUSAN-INCOMPLETE
+# build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")

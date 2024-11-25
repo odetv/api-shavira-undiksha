@@ -121,9 +121,14 @@ va-shavira-undiksha
 │  │  └─ Debug.py
 │  └─ Home.py
 ├─ public
+│  ├─ etc
+│  │  └─ example_question.txt
 │  └─ images
 │     └─ Images.jpg
 ├─ src
+│  ├─ agents
+│  │  ├─ __init__.py
+│  │  └─ agents.py
 │  ├─ config
 │  │  └─ config.py
 │  ├─ datasets
@@ -158,9 +163,11 @@ va-shavira-undiksha
 │  ├─ raw_process.py
 │  ├─ scrapper_datasets.py
 │  └─ scrapper_rss.py
+├─ .dockerignore
 ├─ .env.example
 ├─ .gitignore
-├─ example_question.txt
+├─ docker-compose.yaml
+├─ Dockerfile
 ├─ main.py
 ├─ README.md
 └─ requirements.txt

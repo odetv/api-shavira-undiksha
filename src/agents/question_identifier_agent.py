@@ -38,27 +38,17 @@ def questionIdentifierAgent(state: AgentState):
     state["question_type"] = responseTypeQuestion
     print("\nPertanyaan:", expanded_question)
     print(f"question_type: {responseTypeQuestion}")
-    print(responseTypeQuestion)
 
-    json_like_data = re.search(r'\{.*\}', responseTypeQuestion, re.DOTALL)
-    if json_like_data:
-        cleaned_response = json_like_data.group(0)
-        print(f"DEBUG: Bagian JSON-like yang diambil: {cleaned_response}")
-    else:
-        print("DEBUG: Tidak ditemukan data JSON-like.")
-        cleaned_response = ""
+    pattern = r'"(.*?)":\s*"(.*?)"'
+    matches = re.findall(pattern, responseTypeQuestion)
+    result_dict = {key: value for key, value in matches}
 
-    general_question_match = re.search(r'"general_agent"\s*:\s*"([^"]*)"', cleaned_response)
-    news_question_match = re.search(r'"news_agent"\s*:\s*"([^"]*)"', cleaned_response)
-    account_question_match = re.search(r'"account_agent"\s*:\s*"([^"]*)"', cleaned_response)
-    kelulusan_question_match = re.search(r'"kelulusan_agent"\s*:\s*"([^"]*)"', cleaned_response)
-    ktm_question_match = re.search(r'"ktm_agent"\s*:\s*"([^"]*)"', cleaned_response)
-
-    state["generalQuestion"] = general_question_match.group(1) if general_question_match and general_question_match.group(1) else "Tidak ada informasi"
-    state["newsQuestion"] = news_question_match.group(1) if news_question_match and news_question_match.group(1) else "Tidak ada informasi"
-    state["accountQuestion"] = account_question_match.group(1) if account_question_match and account_question_match.group(1) else "Tidak ada informasi"
-    state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
-    state["ktmQuestion"] = ktm_question_match.group(1) if ktm_question_match and ktm_question_match.group(1) else "Tidak ada informasi"
+    state["generalQuestion"] = result_dict.get("general_agent", None)
+    state["newsQuestion"] = result_dict.get("news_agent", None)
+    state["accountQuestion"] = result_dict.get("account_agent", None)
+    state["kelulusanQuestion"] = result_dict.get("kelulusan_agent", None)
+    state["ktmQuestion"] = result_dict.get("ktm_agent", None)
+    
     print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
     print(f"Debug: State 'newsQuestion' setelah update: {state['newsQuestion']}")
     print(f"Debug: State 'accountQuestion' setelah update: {state['accountQuestion']}")

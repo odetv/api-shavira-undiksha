@@ -3,12 +3,15 @@ from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.api_undiksha import show_reset_sso
 from utils.debug_time import time_check
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def resetAccountAgent(state: AgentState):
     info = "\n--- Reset Account ---"
     print(info)
+
+    agentEntry(state, "account_agent", ["resetAccount_agent"])
 
     state["emailAccountUser"]
     state["loginAccountStatus"]

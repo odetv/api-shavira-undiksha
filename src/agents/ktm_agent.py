@@ -3,12 +3,15 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def ktmAgent(state: AgentState):
     info = "\n--- KTM ---"
     print(info)
+
+    agentEntry(state, "ktm_agent", [])
 
     prompt = """
         Anda adalah seoarang analis informasi Kartu Tanda Mahasiswa (KTM).

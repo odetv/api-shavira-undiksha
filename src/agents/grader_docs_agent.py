@@ -2,12 +2,15 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def graderDocsAgent(state: AgentState):
     info = "\n--- Grader Documents ---"
     print(info)
+
+    agentEntry(state, "general_agent", ["graderDocs_agent"])
 
     prompt = f"""
         Anda adalah seorang pemilih konteks handal.
@@ -27,6 +30,7 @@ def graderDocsAgent(state: AgentState):
 
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderDocs_agent")
+
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
 

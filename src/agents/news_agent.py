@@ -3,12 +3,15 @@ from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
 from utils.scrapper_rss import scrap_news
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def newsAgent(state: AgentState):
     info = "\n--- News ---"
     print(info)
+
+    agentEntry(state, "news_agent", [])
 
     result = scrap_news()
     state["newsScrapper"] = result

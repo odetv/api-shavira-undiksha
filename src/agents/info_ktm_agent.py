@@ -2,12 +2,15 @@ import re
 from utils.agent_state import AgentState
 from utils.api_undiksha import show_ktm_mhs
 from utils.debug_time import time_check
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def infoKTMAgent(state: AgentState):
     info = "\n--- Info KTM ---"
     print(info)
+    
+    agentEntry(state, "ktm_agent", ["infoKTM_agent"])
 
     nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["ktmQuestion"], re.IGNORECASE)
     state["idNIMMhs"] = nim_match.group(1)

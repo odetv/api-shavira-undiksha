@@ -94,8 +94,6 @@ def build_graph(question):
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
-    print("xxxxx")
-
     workflow.add_node("resultWriter_agent", resultWriterAgent)
     workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
     workflow.add_edge("resultWriter_agent", "graderHallucinations_agent")

@@ -39,6 +39,20 @@ def questionIdentifierAgent(state: AgentState):
     print("\nPertanyaan:", expanded_question)
     print(f"question_type: {responseTypeQuestion}")
 
+    total_agents = 0
+    if "general_agent" in state["question_type"]:
+        total_agents += 3
+    if "news_agent" in state["question_type"]:
+        total_agents += 1
+    if "account_agent" in state["question_type"]:
+        total_agents += 2
+    if "kelulusan_agent" in state["question_type"]:
+        total_agents += 2
+    if "ktm_agent" in state["question_type"]:
+        total_agents += 2
+    state["totalAgents"] = total_agents
+    print(f"Debug: Total agents: {state['totalAgents']}")
+
     pattern = r'"(.*?)":\s*"(.*?)"'
     matches = re.findall(pattern, responseTypeQuestion)
     result_dict = {key: value for key, value in matches}

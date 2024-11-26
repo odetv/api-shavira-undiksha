@@ -6,9 +6,11 @@ from utils.debug_time import time_check
 
 @time_check
 def resultWriterAgent(state: AgentState):
+    print(f"Debug: Total agents di result writer: {state['totalAgents']}")
+    print(f"Debug: Agents active di result writer: {state['activeAgents']}")
+
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
-
     if "general_agent" in state["finishedAgents"]:
         total_agents += 1
     if "graderDocs_agent" in state["finishedAgents"]:
@@ -37,7 +39,6 @@ def resultWriterAgent(state: AgentState):
         total_agents += 1
     if "infoKTM_agent" in state["finishedAgents"]:
         total_agents += 1
-    
     print(f"DEBUG: finishedAgents = {state['finishedAgents']}")
     print(f"DEBUG: expected_agents_count = {expected_agents_count}, total_agents = {total_agents}")
 

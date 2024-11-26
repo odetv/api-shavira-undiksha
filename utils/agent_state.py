@@ -7,10 +7,16 @@ class AnswerState(TypedDict):
     agent = None
     answer = None
 
+class AgentEntry(TypedDict):
+    agent: str
+    child: list[str]
+
 class AgentState(TypedDict):
     context: str
     question: str
     question_type: str
+    totalAgents: int
+    activeAgents: Annotated[Sequence[AgentEntry], add]
     generalContext: str
     generalGraderDocs: str
     generalHallucinationCount: int

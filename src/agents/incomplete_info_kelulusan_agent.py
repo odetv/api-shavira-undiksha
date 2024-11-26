@@ -1,11 +1,14 @@
 from utils.agent_state import AgentState
 from utils.debug_time import time_check
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def incompleteInfoKelulusanAgent(state: AgentState):
     info = "\n--- Incomplete Info Kelulusan SMBJM ---"
     print(info)
+
+    agentEntry(state, "kelulusan_agent", ["incompleteInfoKelulusan_agent"])
 
     response = """
         Untuk mengecek kelulusan dapat melalui link https://penerimaan.undiksha.ac.id/smbjm/login atau langsung dari pesan ini saya dapat membantu anda, namun diperlukan mengirimkan Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM.

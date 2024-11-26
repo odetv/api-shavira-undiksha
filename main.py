@@ -27,7 +27,6 @@ def build_graph(question):
     initial_state = questionIdentifierAgent({"question": question, "finishedAgents": set()})
     context = initial_state["question_type"]
     workflow.add_node("questionIdentifier_agent", lambda x: initial_state)
-    workflow.add_node("resultWriter_agent", resultWriterAgent)
     workflow.add_edge(START, "questionIdentifier_agent")
 
     if "general_agent" in context:
@@ -95,6 +94,7 @@ def build_graph(question):
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
+    workflow.add_node("resultWriter_agent", resultWriterAgent)
     workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
     workflow.add_edge("resultWriter_agent", "graderHallucinations_agent")
     workflow.add_conditional_edges(
@@ -116,4 +116,5 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")
+# build_graph("siapa rektor undiksha? ingin cetak ktm")
+build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")

@@ -4,12 +4,15 @@ from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.api_undiksha import show_kelulusan_pmb
 from utils.debug_time import time_check
+from utils.agent_entry import agentEntry
 
 
 @time_check
 def infoKelulusanAgent(state: AgentState):
     info = "\n--- Info Kelulusan SMBJM ---"
     print(info)
+
+    agentEntry(state, "kelulusan_agent", ["infoKelulusan_agent"])
 
     noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["kelulusanQuestion"], re.IGNORECASE)
     tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)

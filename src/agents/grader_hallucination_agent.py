@@ -7,7 +7,7 @@ from utils.debug_time import time_check
 @time_check
 def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Grader Hallucinations ---"
-    print(info) 
+    print(info)
 
     if "responseFinal" not in state:
         state["responseFinal"] = ""
@@ -40,4 +40,3 @@ def graderHallucinationsAgent(state: AgentState):
     print(f"Apakah hasil halusinasi? {is_hallucination}")
     print(f"Jumlah pengecekan halusinasi berturut-turut: {state['generalHallucinationCount']}")
     return {"isHallucination": state["isHallucination"], "generalHallucinationCount": state["generalHallucinationCount"]}
-

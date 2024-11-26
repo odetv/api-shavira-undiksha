@@ -10,33 +10,33 @@ def resultWriterAgent(state: AgentState):
     total_agents = 0
 
     if "general_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "graderDocs_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "answerGeneral_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "news_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "account_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "resetAccount_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "incompleteAccount_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "anomalyAccount_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "kelulusan_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "incompleteInfoKelulusan_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "infoKelulusan_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "ktm_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "incompleteInfoKTM_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     if "infoKTM_agent" in state["finishedAgents"]:
-        total_agents + 1
+        total_agents += 1
     
     print(f"DEBUG: finishedAgents = {state['finishedAgents']}")
     print(f"DEBUG: expected_agents_count = {expected_agents_count}, total_agents = {total_agents}")

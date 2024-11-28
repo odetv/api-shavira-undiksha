@@ -53,8 +53,8 @@ def accountAgent(state: AgentState):
     state["emailAccountUser"] = result_dict.get("emailaccountuser", None)
     state["loginAccountStatus"] = result_dict.get("loginaccountstatus", None)
 
-    print(f"Debug: State 'emailAccountUser' setelah update: {state['emailAccountUser']}")
-    print(f"Debug: State 'loginAccountStatus' setelah update: {state['loginAccountStatus']}")
+    print(f"DEBUG: emailAccountUser: {state['emailAccountUser']}")
+    print(f"DEBUG: loginAccountStatus: {state['loginAccountStatus']}")
     
     return state
 

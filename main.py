@@ -1,24 +1,24 @@
 from langgraph.graph import END, START, StateGraph
 from utils.agent_state import AgentState
-from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
+from utils.create_graph_image import get_graph_image
 from src.agents.question_identifier_agent import questionIdentifierAgent
 from src.agents.result_writer_agent import resultWriterAgent
-from src.agents.general_agent import generalAgent
-from src.agents.grader_docs_agent import graderDocsAgent
-from src.agents.answer_general_agent import answerGeneralAgent
-from src.agents.news_agent import newsAgent
-from src.agents.account_agent import accountAgent, routeAccountAgent
-from src.agents.reset_account_agent import resetAccountAgent
-from src.agents.incomplete_account_agent import incompleteAccountAgent
-from src.agents.anomaly_account_agent import anomalyAccountAgent
-from src.agents.kelulusan_agent import kelulusanAgent, routeKelulusanAgent
-from src.agents.incomplete_info_kelulusan_agent import incompleteInfoKelulusanAgent
-from src.agents.info_kelulusan_agent import infoKelulusanAgent
-from src.agents.ktm_agent import ktmAgent, routeKTMAgent
-from src.agents.incomplete_info_ktm_agent import incompleteInfoKTMAgent
-from src.agents.info_ktm_agent import infoKTMAgent
-from src.agents.grader_hallucination_agent import graderHallucinationsAgent
+from src.agents.grader_hallucination_agent import graderHallucinationAgent
+from src.agents.general_agent.general_agent import generalAgent
+from src.agents.general_agent.grader_docs_agent import graderDocsAgent
+from src.agents.general_agent.answer_general_agent import answerGeneralAgent
+from src.agents.news_agent.news_agent import newsAgent
+from src.agents.kelulusan_agent.kelulusan_agent import kelulusanAgent, routeKelulusanAgent
+from src.agents.kelulusan_agent.incomplete_info_kelulusan_agent import incompleteInfoKelulusanAgent
+from src.agents.kelulusan_agent.info_kelulusan_agent import infoKelulusanAgent
+from src.agents.ktm_agent.ktm_agent import ktmAgent, routeKTMAgent
+from src.agents.ktm_agent.incomplete_info_ktm_agent import incompleteInfoKTMAgent
+from src.agents.ktm_agent.info_ktm_agent import infoKTMAgent
+from src.agents.account_agent.account_agent import accountAgent, routeAccountAgent
+from src.agents.account_agent.incomplete_account_agent import incompleteAccountAgent
+from src.agents.account_agent.anomaly_account_agent import anomalyAccountAgent
+from src.agents.account_agent.reset_account_agent import resetAccountAgent
 
 
 @time_check
@@ -95,10 +95,10 @@ def build_graph(question):
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
     workflow.add_node("resultWriter_agent", resultWriterAgent)
-    workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
-    workflow.add_edge("resultWriter_agent", "graderHallucinations_agent")
+    workflow.add_node("graderHallucination_agent", graderHallucinationAgent)
+    workflow.add_edge("resultWriter_agent", "graderHallucination_agent")
     workflow.add_conditional_edges(
-        "graderHallucinations_agent",
+        "graderHallucination_agent",
         lambda state: state["isHallucination"] and state["hallucinationCount"] < 2 if state["isHallucination"] else False,
         {
             True: "resultWriter_agent",

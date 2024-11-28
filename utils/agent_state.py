@@ -6,6 +6,7 @@ class AnswerState(TypedDict):
     question = None
     answer = None
 
+
 class AgentState(TypedDict):
     context: str
     question: str

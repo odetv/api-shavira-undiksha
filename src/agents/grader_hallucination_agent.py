@@ -36,7 +36,6 @@ def graderHallucinationsAgent(state: AgentState):
         state["generalHallucinationCount"] = 0
 
     state["isHallucination"] = is_hallucination
-    state["finishedAgents"].add("graderHallucinations_agent")
     print(f"Apakah hasil halusinasi? {is_hallucination}")
     print(f"Jumlah pengecekan halusinasi berturut-turut: {state['generalHallucinationCount']}")
     return {"isHallucination": state["isHallucination"], "generalHallucinationCount": state["generalHallucinationCount"]}

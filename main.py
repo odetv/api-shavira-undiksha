@@ -19,6 +19,7 @@ from src.agents.ktm_agent import ktmAgent
 from src.agents.incomplete_info_ktm_agent import incompleteInfoKTMAgent
 from src.agents.info_ktm_agent import infoKTMAgent
 from src.agents.grader_hallucination_agent import graderHallucinationsAgent
+from src.agents.route_agent import routing_agent
 
 
 @time_check
@@ -51,7 +52,7 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "account_agent")
         workflow.add_conditional_edges(
             "account_agent",
-            lambda state: state["checkAccount"],
+            routing_agent.route_check_account,
             {
                 "reset": "resetAccount_agent",
                 "incomplete": "incompleteAccount_agent",
@@ -69,7 +70,7 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "kelulusan_agent")
         workflow.add_conditional_edges(
             "kelulusan_agent",
-            lambda state: state["checkKelulusan"],
+            routing_agent.route_info_kelulusan,
             {
                 True: "infoKelulusan_agent",
                 False: "incompleteInfoKelulusan_agent"
@@ -85,7 +86,7 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "ktm_agent")
         workflow.add_conditional_edges(
             "ktm_agent",
-            lambda state: state["checkKTM"],
+            routing_agent.route_info_ktm,
             {
                 True: "infoKTM_agent",
                 False: "incompleteInfoKTM_agent"
@@ -93,6 +94,8 @@ def build_graph(question):
         )
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
+
+    print("xxxxxxxxxxxxxxxx")
 
     workflow.add_node("resultWriter_agent", resultWriterAgent)
     workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)

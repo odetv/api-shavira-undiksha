@@ -20,6 +20,7 @@ def incompleteInfoKTMAgent(state: AgentState):
     """
 
     agentOpinion = {
+        
         "answer": response
     }
 

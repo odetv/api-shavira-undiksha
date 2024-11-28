@@ -127,7 +127,6 @@ va-shavira-undiksha
 │     └─ Images.jpg
 ├─ src
 │  ├─ agents
-│  │  ├─ __init__.py
 │  │  └─ agents.py
 │  ├─ config
 │  │  └─ config.py

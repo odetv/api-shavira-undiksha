@@ -2,41 +2,56 @@ from langgraph.graph import END, START, StateGraph
 from utils.agent_state import AgentState
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
-from src.agents import *
+from src.agents.question_identifier_agent import questionIdentifierAgent
+from src.agents.result_writer_agent import resultWriterAgent
+from src.agents.general_agent import generalAgent
+from src.agents.grader_docs_agent import graderDocsAgent
+from src.agents.answer_general_agent import answerGeneralAgent
+from src.agents.news_agent import newsAgent
+from src.agents.account_agent import accountAgent, routeAccountAgent
+from src.agents.reset_account_agent import resetAccountAgent
+from src.agents.incomplete_account_agent import incompleteAccountAgent
+from src.agents.anomaly_account_agent import anomalyAccountAgent
+from src.agents.kelulusan_agent import kelulusanAgent, routeKelulusanAgent
+from src.agents.incomplete_info_kelulusan_agent import incompleteInfoKelulusanAgent
+from src.agents.info_kelulusan_agent import infoKelulusanAgent
+from src.agents.ktm_agent import ktmAgent, routeKTMAgent
+from src.agents.incomplete_info_ktm_agent import incompleteInfoKTMAgent
+from src.agents.info_ktm_agent import infoKTMAgent
+from src.agents.grader_hallucination_agent import graderHallucinationsAgent
 
 
 @time_check
 def build_graph(question):
     workflow = StateGraph(AgentState)
-    initial_state = QuestionIdentifierAgent.questionIdentifierAgent({"question": question, "finishedAgents": set()})
+    initial_state = questionIdentifierAgent({"question": question, "finishedAgents": set()})
     context = initial_state["question_type"]
     workflow.add_node("questionIdentifier_agent", lambda x: initial_state)
-    workflow.add_node("resultWriter_agent", ResultWriterAgent.resultWriterAgent)
     workflow.add_edge(START, "questionIdentifier_agent")
 
     if "general_agent" in context:
-        workflow.add_node("general_agent", GeneralAgent.generalAgent)
-        workflow.add_node("graderDocs_agent", GraderDocsAgent.graderDocsAgent)
-        workflow.add_node("answerGeneral_agent", AnswerGeneralAgent.answerGeneralAgent)
+        workflow.add_node("general_agent", generalAgent)
+        workflow.add_node("graderDocs_agent", graderDocsAgent)
+        workflow.add_node("answerGeneral_agent", answerGeneralAgent)
         workflow.add_edge("questionIdentifier_agent", "general_agent")
         workflow.add_edge("general_agent", "graderDocs_agent")
         workflow.add_edge("graderDocs_agent", "answerGeneral_agent")
         workflow.add_edge("answerGeneral_agent", "resultWriter_agent")
 
     if "news_agent" in context:
-        workflow.add_node("news_agent", NewsAgent.newsAgent)
+        workflow.add_node("news_agent", newsAgent)
         workflow.add_edge("questionIdentifier_agent", "news_agent")
         workflow.add_edge("news_agent", "resultWriter_agent")
 
     if "account_agent" in context:
-        workflow.add_node("account_agent", AccountAgent.accountAgent)
-        workflow.add_node("resetAccount_agent", ResetAccountAgent.resetAccountAgent)
-        workflow.add_node("incompleteAccount_agent", IncompleteAccountAgent.incompleteAccountAgent)
-        workflow.add_node("anomalyAccount_agent", AnomalyAccountAgent.anomalyAccountAgent)
+        workflow.add_node("account_agent", accountAgent)
+        workflow.add_node("resetAccount_agent", resetAccountAgent)
+        workflow.add_node("incompleteAccount_agent", incompleteAccountAgent)
+        workflow.add_node("anomalyAccount_agent", anomalyAccountAgent)
         workflow.add_edge("questionIdentifier_agent", "account_agent")
         workflow.add_conditional_edges(
             "account_agent",
-            lambda state: state["checkAccount"],
+            routeAccountAgent,
             {
                 "reset": "resetAccount_agent",
                 "incomplete": "incompleteAccount_agent",
@@ -48,13 +63,13 @@ def build_graph(question):
         workflow.add_edge("anomalyAccount_agent", "resultWriter_agent")
 
     if "kelulusan_agent" in context:
-        workflow.add_node("kelulusan_agent", KelulusanAgent.kelulusanAgent)
-        workflow.add_node("incompleteInfoKelulusan_agent", IncompleteInfoKelulusanAgent.incompleteInfoKelulusanAgent)
-        workflow.add_node("infoKelulusan_agent", InfoKelulusanAgent.infoKelulusanAgent)
+        workflow.add_node("kelulusan_agent", kelulusanAgent)
+        workflow.add_node("incompleteInfoKelulusan_agent", incompleteInfoKelulusanAgent)
+        workflow.add_node("infoKelulusan_agent", infoKelulusanAgent)
         workflow.add_edge("questionIdentifier_agent", "kelulusan_agent")
         workflow.add_conditional_edges(
             "kelulusan_agent",
-            lambda state: state["checkKelulusan"],
+            routeKelulusanAgent,
             {
                 True: "infoKelulusan_agent",
                 False: "incompleteInfoKelulusan_agent"
@@ -64,13 +79,13 @@ def build_graph(question):
         workflow.add_edge("infoKelulusan_agent", "resultWriter_agent")
 
     if "ktm_agent" in context:
-        workflow.add_node("ktm_agent", KtmAgent.ktmAgent)
-        workflow.add_node("incompleteInfoKTM_agent", IncompleteInfoKTMAgent.incompleteInfoKTMAgent)
-        workflow.add_node("infoKTM_agent", InfoKTMAgent.infoKTMAgent)
+        workflow.add_node("ktm_agent", ktmAgent)
+        workflow.add_node("incompleteInfoKTM_agent", incompleteInfoKTMAgent)
+        workflow.add_node("infoKTM_agent", infoKTMAgent)
         workflow.add_edge("questionIdentifier_agent", "ktm_agent")
         workflow.add_conditional_edges(
             "ktm_agent",
-            lambda state: state["checkKTM"],
+            routeKTMAgent,
             {
                 True: "infoKTM_agent",
                 False: "incompleteInfoKTM_agent"
@@ -79,11 +94,12 @@ def build_graph(question):
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
-    workflow.add_node("graderHallucinations_agent", GraderHallucinationsAgent.graderHallucinationsAgent)
+    workflow.add_node("resultWriter_agent", resultWriterAgent)
+    workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
     workflow.add_edge("resultWriter_agent", "graderHallucinations_agent")
     workflow.add_conditional_edges(
         "graderHallucinations_agent",
-        lambda state: state["isHallucination"] and state["generalHallucinationCount"] < 2 if state["isHallucination"] else False,
+        lambda state: state["isHallucination"] and state["hallucinationCount"] < 2 if state["isHallucination"] else False,
         {
             True: "resultWriter_agent",
             False: END,

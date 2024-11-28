@@ -2,15 +2,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
-from utils.agent_entry import agentEntry
 
 
 @time_check
 def answerGeneralAgent(state: AgentState):
     info = "\n--- Answer General ---"
     print(info)
-
-    agentEntry(state, "general_agent", ["answerGeneral_agent"])
 
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
@@ -32,10 +29,10 @@ def answerGeneralAgent(state: AgentState):
     ]
     response = chat_llm(messages)
     agentOpinion = {
+        "question": state["generalQuestion"],
         "answer": response
     }
 
-    state["responseGeneral"] = response
     state["finishedAgents"].add("answerGeneral_agent")
     
     return {"answerAgents": [agentOpinion]}

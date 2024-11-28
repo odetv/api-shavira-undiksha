@@ -1,4 +1,4 @@
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
@@ -6,11 +6,8 @@ from utils.debug_time import time_check
 
 @time_check
 def resultWriterAgent(state: AgentState):
-    print(f"Debug: Total agents di result writer: {state['totalAgents']}")
-    print(f"Debug: Agents active di result writer: {len(state['finishedAgents'])}")
-
     if len(state["finishedAgents"]) < state["totalAgents"]:
-        print("Menunggu agen lain untuk menyelesaikan...")
+        print("\nMenunggu agent lain menyelesaikan tugas...")
         return None
     
     elif len(state["finishedAgents"]) == state["totalAgents"]:
@@ -21,6 +18,8 @@ def resultWriterAgent(state: AgentState):
             Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
             - Awali dengan "Salam Harmoni🙏"
             - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
+            - Urutan informasi sesuai dengan urutan pertanyaan.
+            - Jangan menyebut ulang pertanyaan secara eksplisit.
             - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
             - Hasilkan response dalam format Markdown.
             Berikut adalah informasinya:
@@ -28,11 +27,11 @@ def resultWriterAgent(state: AgentState):
         """
 
         messages = [
-            SystemMessage(content=prompt)
+            SystemMessage(content=prompt),
+            HumanMessage(content=state["question"])
         ]
         response = chat_llm(messages)
-
+        
         state["responseFinal"] = response
-
-
+        
         return {"responseFinal": state["responseFinal"]}

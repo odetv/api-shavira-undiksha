@@ -1,8 +1,15 @@
-from utils.agent_state import AgentState
+from operator import add
+from typing_extensions import TypedDict, Annotated, Sequence
 from typing_extensions import List
 
 
-def agentEntry(state: AgentState, agent_name: str, new_child_agents: List[str]) -> None:
+class AnswerState(TypedDict):
+    question = None
+    answer = None
+answerAgents : Annotated[Sequence[AnswerState], add]
+
+
+def agentEntry(state:AnswerState, agent_name: str, new_child_agents: List[str]) -> None:
     if "activeAgents" not in state:
         state["activeAgents"] = []
 

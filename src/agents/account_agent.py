@@ -3,15 +3,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
-from utils.agent_entry import agentEntry
 
 
 @time_check
 def accountAgent(state: AgentState):
     info = "\n--- ACCOUNT ---"
     print(info)
-
-    agentEntry(state, "account_agent", [])
 
     prompt = """
         Anda adalah seorang admin dari sistem akun Undiksha (Universitas Pendidikan Ganesha).
@@ -49,18 +46,19 @@ def accountAgent(state: AgentState):
     ]
     responseParsingAccount = chat_llm(messagesParsingAccount).strip().lower()
 
-    json_like_data = re.search(r'\{.*\}', responseParsingAccount, re.DOTALL)
-    if json_like_data:
-        cleaned_response = json_like_data.group(0)
-        print(f"DEBUG: Bagian JSON-like yang diambil: {cleaned_response}")
-    else:
-        print("DEBUG: Tidak ditemukan data JSON-like.")
-        cleaned_response = ""
-    emailAccountUser_match = re.search(r'"emailaccountuser"\s*:\s*"([^"]*)"', cleaned_response)
-    loginAccountStatus_match = re.search(r'"loginaccountstatus"\s*:\s*"([^"]*)"', cleaned_response)
-    state["emailAccountUser"] = emailAccountUser_match.group(1) if emailAccountUser_match and emailAccountUser_match.group(1) else "Tidak ada informasi"
-    state["loginAccountStatus"] = loginAccountStatus_match.group(1) if loginAccountStatus_match and loginAccountStatus_match.group(1) else "Tidak ada informasi"
+    pattern = r'"(.*?)":\s*"(.*?)"'
+    matches = re.findall(pattern, responseParsingAccount)
+    result_dict = {key: value for key, value in matches}
+
+    state["emailAccountUser"] = result_dict.get("emailaccountuser", None)
+    state["loginAccountStatus"] = result_dict.get("loginaccountstatus", None)
+
     print(f"Debug: State 'emailAccountUser' setelah update: {state['emailAccountUser']}")
     print(f"Debug: State 'loginAccountStatus' setelah update: {state['loginAccountStatus']}")
     
     return state
+
+
+@time_check
+def routeAccountAgent(state: AgentState):
+    return state["checkAccount"]

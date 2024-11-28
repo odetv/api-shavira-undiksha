@@ -6,14 +6,13 @@ from utils.debug_time import time_check
 
 @time_check
 def graderHallucinationsAgent(state: AgentState):
-    info = "\n--- Grader Hallucinations ---"
+    info = "\n--- GRADER HALLUCINATIONS ---"
     print(info)
 
     if "responseFinal" not in state:
         state["responseFinal"] = ""
-
-    if "generalHallucinationCount" not in state:
-        state["generalHallucinationCount"] = 0
+    if "hallucinationCount" not in state:
+        state["hallucinationCount"] = 0
 
     prompt = f"""
         Anda adalah seorang penilai dari OPINI dengan FAKTA.
@@ -28,14 +27,15 @@ def graderHallucinationsAgent(state: AgentState):
     ]
     response = chat_llm(messages).strip().lower()
     is_hallucination = response == "true"
-
     state["isHallucination"] = is_hallucination
+
     if is_hallucination:
-        state["generalHallucinationCount"] += 1
+        state["hallucinationCount"] += 1
     else:
-        state["generalHallucinationCount"] = 0
+        state["hallucinationCount"] = 0
 
     state["isHallucination"] = is_hallucination
     print(f"Apakah hasil halusinasi? {is_hallucination}")
-    print(f"Jumlah pengecekan halusinasi berturut-turut: {state['generalHallucinationCount']}")
-    return {"isHallucination": state["isHallucination"], "generalHallucinationCount": state["generalHallucinationCount"]}
+    print(f"Jumlah pengecekan halusinasi berturut-turut: {state['hallucinationCount']}")
+    
+    return {"isHallucination": state["isHallucination"], "hallucinationCount": state["hallucinationCount"]}

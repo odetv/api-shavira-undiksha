@@ -3,15 +3,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
-from utils.agent_entry import agentEntry
 
 
 @time_check
 def kelulusanAgent(state: AgentState):
     info = "\n--- CEK KELULUSAN SMBJM ---"
     print(info)
-
-    agentEntry(state, "kelulusan_agent", [])
 
     prompt = """
         Anda adalah seoarang analis informasi kelulusan SMBJM.
@@ -42,4 +39,10 @@ def kelulusanAgent(state: AgentState):
     state["checkKelulusan"] = is_complete
     state["finishedAgents"].add("kelulusan_agent") 
     print(f"Info Kelulusan Lengkap? {is_complete}")
+    
     return {"checkKelulusan": state["checkKelulusan"]}
+
+
+@time_check
+def routeKelulusanAgent(state: AgentState):
+    return state["checkKelulusan"]

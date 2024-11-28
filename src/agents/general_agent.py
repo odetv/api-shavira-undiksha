@@ -3,14 +3,11 @@ from utils.agent_state import AgentState
 from langchain_community.vectorstores import FAISS
 from utils.llm import embedder
 from src.config.config import VECTORDB_DIR
-from utils.agent_entry import agentEntry
 
 @time_check
 def generalAgent(state: AgentState):
     info = "\n--- GENERAL ---"
     print(info)
-
-    agentEntry(state, "general_agent", [])
     
     VECTOR_PATH = VECTORDB_DIR
     _,EMBEDDER = embedder()

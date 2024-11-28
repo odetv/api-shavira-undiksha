@@ -3,7 +3,6 @@ from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.api_undiksha import show_reset_sso
 from utils.debug_time import time_check
-from utils.agent_entry import agentEntry
 
 
 @time_check
@@ -11,11 +10,8 @@ def resetAccountAgent(state: AgentState):
     info = "\n--- Reset Account ---"
     print(info)
 
-    agentEntry(state, "account_agent", ["resetAccount_agent"])
-
     state["emailAccountUser"]
     state["loginAccountStatus"]
-
     reset_sso_info = show_reset_sso(state)
 
     try:
@@ -43,10 +39,13 @@ def resetAccountAgent(state: AgentState):
             HumanMessage(content=state["accountQuestion"])
         ]
         response = chat_llm(messages)
+
         agentOpinion = {
+            "question": state["accountQuestion"],
             "answer": response
         }
         state["finishedAgents"].add("resetAccount_agent") 
+
         return {"answerAgents": [agentOpinion]}
 
     except Exception as e:
@@ -61,8 +60,11 @@ def resetAccountAgent(state: AgentState):
             SystemMessage(content=prompt)
         ]
         response = chat_llm(messages)
+
         agentOpinion = {
+            "question": state["accountQuestion"],
             "answer": response
         }
         state["finishedAgents"].add("resetAccount_agent") 
+        
         return {"answerAgents": [agentOpinion]}

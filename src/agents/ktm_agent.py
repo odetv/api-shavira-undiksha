@@ -3,15 +3,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
-from utils.agent_entry import agentEntry
 
 
 @time_check
 def ktmAgent(state: AgentState):
     info = "\n--- KTM ---"
     print(info)
-
-    agentEntry(state, "ktm_agent", [])
 
     prompt = """
         Anda adalah seoarang analis informasi Kartu Tanda Mahasiswa (KTM).
@@ -32,7 +29,7 @@ def ktmAgent(state: AgentState):
 
     nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["ktmQuestion"], re.IGNORECASE)
     if nim_match:
-        state["idNIMMhs"] = nim_match.group(1)
+        state["nimKTMMhs"] = nim_match.group(1)
         response = "true"
     else:
         response = "false"
@@ -41,4 +38,10 @@ def ktmAgent(state: AgentState):
     state["checkKTM"] = is_complete
     state["finishedAgents"].add("ktm_agent") 
     print(f"Info KTM Lengkap? {is_complete}")
+    
     return {"checkKTM": state["checkKTM"]}
+
+
+@time_check
+def routeKTMAgent(state: AgentState):
+    return state["checkKTM"]

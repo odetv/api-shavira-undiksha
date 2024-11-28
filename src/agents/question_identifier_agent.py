@@ -26,7 +26,7 @@ def questionIdentifierAgent(state: AgentState):
         - ACCOUNT_AGENT - Bekaitan dengan reset ulang lupa password hanya pada akun email Universitas Pendidikan Ganesha (Undiksha) atau ketika user lupa dengan password email undiksha di gmail (google) atau user lupa password login di SSO Undiksha, jika hanya masalah cara merubah password itu masuk ke general.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
         - KTM_AGENT - Hanya jika pertanyaan mengandung kata "ktm" atau "nim". Jika menyebutkan "nip" maka itu general.
-        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
+        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang ada sesuai dengan konteks saja (jika tidak ada jangan dibuat).
         Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "NEWS_AGENT": "hanya jika pertanyaan mengandung kata "berita" atau "news"", "ACCOUNT_AGENT": "pertanyaan relevan terkait lupa password akun", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "hanya jika pertanyaan mengandung kata "ktm" atau "nim"."}).
         Buat dengan format data JSON tanpa membuat key baru.
     """
@@ -35,9 +35,9 @@ def questionIdentifierAgent(state: AgentState):
         HumanMessage(content=expanded_question),
     ]
     responseTypeQuestion = chat_llm(messagesTypeQuestion).strip().lower()
+
     state["question_type"] = responseTypeQuestion
     print("\nPertanyaan:", expanded_question)
-    print(f"question_type: {responseTypeQuestion}")
 
     total_agents = 0
     if "general_agent" in state["question_type"]:
@@ -51,8 +51,7 @@ def questionIdentifierAgent(state: AgentState):
     if "ktm_agent" in state["question_type"]:
         total_agents += 2
     state["totalAgents"] = total_agents
-    print(f"Debug: Total agents: {state['totalAgents']}")
-
+    print(f"DEBUG: Total agents bertugas: {state['totalAgents']}")
     pattern = r'"(.*?)":\s*"(.*?)"'
     matches = re.findall(pattern, responseTypeQuestion)
     result_dict = {key: value for key, value in matches}
@@ -63,10 +62,10 @@ def questionIdentifierAgent(state: AgentState):
     state["kelulusanQuestion"] = result_dict.get("kelulusan_agent", None)
     state["ktmQuestion"] = result_dict.get("ktm_agent", None)
     
-    print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
-    print(f"Debug: State 'newsQuestion' setelah update: {state['newsQuestion']}")
-    print(f"Debug: State 'accountQuestion' setelah update: {state['accountQuestion']}")
-    print(f"Debug: State 'kelulusanQuestion' setelah update: {state['kelulusanQuestion']}")
-    print(f"Debug: State 'ktmQuestion' setelah update: {state['ktmQuestion']}")
+    print(f"DEBUG: generalQuestion: {state['generalQuestion']}")
+    print(f"DEBUG: newsQuestion: {state['newsQuestion']}")
+    print(f"DEBUG: accountQuestion: {state['accountQuestion']}")
+    print(f"DEBUG: kelulusanQuestion: {state['kelulusanQuestion']}")
+    print(f"DEBUG: ktmQuestion: {state['ktmQuestion']}")
 
     return state

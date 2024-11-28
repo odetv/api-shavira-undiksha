@@ -2,15 +2,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from utils.agent_state import AgentState
 from utils.llm import chat_llm
 from utils.debug_time import time_check
-from utils.agent_entry import agentEntry
 
 
 @time_check
 def incompleteAccountAgent(state: AgentState):
     info = "\n--- Incomplete Account ---"
     print(info)
-
-    agentEntry(state, "account_agent", ["incompleteAccount_agent"])
 
     emailAccountUser = state["emailAccountUser"]
     loginAccountStatus = state["loginAccountStatus"]
@@ -37,7 +34,9 @@ def incompleteAccountAgent(state: AgentState):
     response = chat_llm(messages)
 
     agentOpinion = {
+        "question": state["accountQuestion"],
         "answer": response
     }
     state["finishedAgents"].add("incompleteAccount_agent") 
+    
     return {"answerAgents": [agentOpinion]}

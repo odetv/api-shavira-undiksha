@@ -7,7 +7,7 @@ from utils.scrapper_rss import scrap_news
 
 @time_check
 def newsAgent(state: AgentState):
-    info = "\n--- News ---"
+    info = "\n--- NEWS ---"
     print(info)
 
     result = scrap_news()
@@ -26,7 +26,9 @@ def newsAgent(state: AgentState):
     response = chat_llm(messages)
     
     agentOpinion = {
+        "question": state["newsQuestion"],
         "answer": response
     }
     state["finishedAgents"].add("news_agent")
+    
     return {"answerAgents": [agentOpinion]}

@@ -8,18 +8,17 @@ from src.agents.general_agent import generalAgent
 from src.agents.grader_docs_agent import graderDocsAgent
 from src.agents.answer_general_agent import answerGeneralAgent
 from src.agents.news_agent import newsAgent
-from src.agents.account_agent import accountAgent
+from src.agents.account_agent import accountAgent, routeAccountAgent
 from src.agents.reset_account_agent import resetAccountAgent
 from src.agents.incomplete_account_agent import incompleteAccountAgent
 from src.agents.anomaly_account_agent import anomalyAccountAgent
-from src.agents.kelulusan_agent import kelulusanAgent
+from src.agents.kelulusan_agent import kelulusanAgent, routeKelulusanAgent
 from src.agents.incomplete_info_kelulusan_agent import incompleteInfoKelulusanAgent
 from src.agents.info_kelulusan_agent import infoKelulusanAgent
-from src.agents.ktm_agent import ktmAgent
+from src.agents.ktm_agent import ktmAgent, routeKTMAgent
 from src.agents.incomplete_info_ktm_agent import incompleteInfoKTMAgent
 from src.agents.info_ktm_agent import infoKTMAgent
 from src.agents.grader_hallucination_agent import graderHallucinationsAgent
-from src.agents.route_agent import routing_agent
 
 
 @time_check
@@ -52,7 +51,7 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "account_agent")
         workflow.add_conditional_edges(
             "account_agent",
-            routing_agent.route_check_account,
+            routeAccountAgent,
             {
                 "reset": "resetAccount_agent",
                 "incomplete": "incompleteAccount_agent",
@@ -70,7 +69,7 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "kelulusan_agent")
         workflow.add_conditional_edges(
             "kelulusan_agent",
-            routing_agent.route_info_kelulusan,
+            routeKelulusanAgent,
             {
                 True: "infoKelulusan_agent",
                 False: "incompleteInfoKelulusan_agent"
@@ -86,7 +85,7 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "ktm_agent")
         workflow.add_conditional_edges(
             "ktm_agent",
-            routing_agent.route_info_ktm,
+            routeKTMAgent,
             {
                 True: "infoKTM_agent",
                 False: "incompleteInfoKTM_agent"
@@ -95,14 +94,12 @@ def build_graph(question):
         workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
         workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
-    print("xxxxxxxxxxxxxxxx")
-
     workflow.add_node("resultWriter_agent", resultWriterAgent)
     workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
     workflow.add_edge("resultWriter_agent", "graderHallucinations_agent")
     workflow.add_conditional_edges(
         "graderHallucinations_agent",
-        lambda state: state["isHallucination"] and state["generalHallucinationCount"] < 2 if state["isHallucination"] else False,
+        lambda state: state["isHallucination"] and state["hallucinationCount"] < 2 if state["isHallucination"] else False,
         {
             True: "resultWriter_agent",
             False: END,
@@ -119,5 +116,4 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("siapa rektor undiksha? ingin cetak ktm")
-build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")
+# build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")

@@ -26,7 +26,6 @@ def newsAgent(state: AgentState):
     response = chat_llm(messages)
     
     agentOpinion = {
-        "question": state["newsQuestion"],
         "answer": response
     }
     state["finishedAgents"].add("news_agent")

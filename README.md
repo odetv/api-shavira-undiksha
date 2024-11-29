@@ -59,7 +59,16 @@ Masuk ke direktori project
   cd va-shavira-undiksha
 ```
 
-Install Requirements
+Buat virtual environment
+
+```bash
+  pip install virtualenv
+  python -m venv venv
+  venv/Scripts/activate     # windows
+  source venv/bin/activate  # macOS atau linux
+```
+
+Install requirements
 
 ```bash
   pip install -r requirements.txt
@@ -88,56 +97,79 @@ Buat dan Lengkapi file environment variabel (.env)
   VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
-Jalankan dengan Web Streamlit (Debug: `/debug`)
+Jalankan dengan Web Streamlit (Frontpage: `/Home` dan Backpage: `/debug`)
 
 ```bash
-  streamlit run app/Home.py
+  streamlit run app/Home.py --server.port XXXX
 ```
 
 Atau
 
-Jalankan dengan API (Dokumentasi: `/docs` atau `/openapishavira.json`)
+Jalankan dengan API (Dokumentasi: `/docs` atau `/openapipmb.json`)
 
 ```bash
   uvicorn api.api:app --reload --port XXXX
 ```
 
-Contoh Pertanyaan
-[example_question.txt](public/etc/example_question.txt)
+Atau
+
+Jalankan dengan CLI di Terminal
+
+```bash
+  # Tambahkan baris kode ini pada baris terakhir file main.py:
+  build_graph("Ketik pertanyaan disini")
+
+  # Jalankan di terminal:
+  python main.py
+```
+
+Contoh pertanyaan dapat dilihat disini: [example_question.txt](public/etc/example_question.txt)
 
 ## Struktur Project
 
 ```
-va-shavira-undiksha
-├─ api
+va-pmb-undiksha                         # Root directory project
+├─ api                                  # API model service
 │  ├─ logs
 │  │  ├─ logs_activity.xlsx
 │  │  └─ logs_configllm.xlsx
-│  └─ api.py
-├─ app
+│  └─ api.py                            # Base code run API service
+├─ app                                  # Web interface streamlit
 │  ├─ .streamlit
 │  │  └─ config.toml
 │  ├─ pages
 │  │  └─ Debug.py
-│  └─ Home.py
-├─ public
+│  └─ Home.py                           # Base code run web streamlit
+├─ public                               # Public assets file and media
 │  ├─ etc
 │  │  └─ example_question.txt
 │  └─ images
-│     └─ Images.jpg
-├─ src
+│     └─ any-images.jpg
+├─ src                                  # Source base directory
 │  ├─ agents
-│  │  └─ agents.py
+│  │  ├─ account_agent
+│  │  │  └─ any-child-agent.py
+│  │  ├─ general_agent
+│  │  │  └─ any-child-agent.py
+│  │  ├─ kelulusan_agent
+│  │  │  └─ any-child-agent.py
+│  │  ├─ ktm_agent
+│  │  │  └─ any-child-agent.py
+│  │  ├─ news_agent
+│  │  │  └─ any-child-agent.py
+│  │  ├─ grader_hallucination_agent.py
+│  │  ├─ question_identifier_agent.py
+│  │  └─ result_writer_agent.py
 │  ├─ config
 │  │  └─ config.py
 │  ├─ datasets
-│  │  └─ Datasets.pdf
+│  │  └─ any-datasets.pdf
 │  ├─ graph
-│  │  └─ graph-va-shavira-undiksha.png
+│  │  └─ graph-va-pmb-undiksha.png
 │  └─ vectordb
 │     ├─ index.faiss
 │     └─ index.pkl
-├─ test
+├─ test                                 # Unit test evaluation RAGAS
 │  ├─ config
 │  │  ├─ list_qa.xlsx
 │  │  ├─ rag_adaptive.py
@@ -151,7 +183,7 @@ va-shavira-undiksha
 │  │  └─ score_test_naive.xlsx
 │  ├─ test_adaptive.py
 │  └─ test_naive.py
-├─ utils
+├─ utils                                # Tools reusable
 │  ├─ agent_state.py
 │  ├─ api_undiksha.py
 │  ├─ create_graph_image.py
@@ -163,13 +195,13 @@ va-shavira-undiksha
 │  ├─ scrapper_datasets.py
 │  └─ scrapper_rss.py
 ├─ .dockerignore
-├─ .env.example
+├─ .env.example                         # Environment example for use
 ├─ .gitignore
 ├─ docker-compose.yaml
 ├─ Dockerfile
-├─ main.py
+├─ main.py                              # Parrent code virtual assistant
 ├─ README.md
-└─ requirements.txt
+└─ requirements.txt                     # Packages dependencies project
 ```
 
 ## Referensi
@@ -202,5 +234,7 @@ va-shavira-undiksha
 26. [Evaluating RAG Applications with RAGAs](https://towardsdatascience.com/evaluating-rag-applications-with-ragas-81d67b0ee31a)
 27. [RAGAS for RAG in LLMs: A Comprehensive Guide to Evaluation Metrics](https://dkaarthick.medium.com/ragas-for-rag-in-llms-a-comprehensive-guide-to-evaluation-metrics-3aca142d6e38)
 28. [Advanced RAG Techniques: What They Are & How to Use Them](https://www.falkordb.com/blog/advanced-rag/)
+29. [Visualize your RAG Data - Evaluate your Retrieval-Augmented Generation System with Ragas](https://towardsdatascience.com/visualize-your-rag-data-evaluate-your-retrieval-augmented-generation-system-with-ragas-fc2486308557/)
+30. [Visualize your RAG Data — EDA for Retrieval-Augmented Generation](https://itnext.io/visualize-your-rag-data-eda-for-retrieval-augmented-generation-0701ee98768f)
 
 Developed By [DiarCode11](https://github.com/DiarCode11) & [odetv](https://github.com/odetv)

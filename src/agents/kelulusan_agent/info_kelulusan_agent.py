@@ -35,6 +35,7 @@ def infoKelulusanAgent(state: AgentState):
             Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
         """
         agentOpinion = {
+            "question": state["kelulusanQuestion"],
             "answer": response
         }
         state["finishedAgents"].add("infoKelulusan_agent")

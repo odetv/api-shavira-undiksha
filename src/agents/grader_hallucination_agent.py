@@ -5,8 +5,8 @@ from utils.debug_time import time_check
 
 
 @time_check
-def graderHallucinationsAgent(state: AgentState):
-    info = "\n--- GRADER HALLUCINATIONS ---"
+def graderHallucinationAgent(state: AgentState):
+    info = "\n--- GRADER HALLUCINATION ---"
     print(info)
 
     if "responseFinal" not in state:

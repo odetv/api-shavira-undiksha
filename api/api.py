@@ -111,10 +111,9 @@ app = FastAPI(
 
 
 # CORS Headers
-origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -556,9 +555,9 @@ async def visualize_graph(request_http: Request, token: str = Depends(verify_bea
         raise HTTPException(status_code=404, detail="Tidak ditemukan file graph.")
 
 
-# Endpoint untuk mendapatkan data dari log_activity.xlsx sebagai JSON
+# Endpoint untuk mendapatkan data dari logs
 @app.get("/logs", tags=["logs"])
-async def log_activity(request_http: Request, token: str = Depends(verify_bearer_token)):
+async def logs(request_http: Request, token: str = Depends(verify_bearer_token)):
     file_path = "api/logs/log_activity.xlsx"
     if os.path.exists(file_path):
         try:

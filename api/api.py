@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File, 
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import APIKeyHeader
+import openpyxl
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_405_METHOD_NOT_ALLOWED
 from dotenv import load_dotenv
@@ -85,6 +86,10 @@ tags_metadata = [
     {
         "name": "graph",
         "description": "Gambar alur graph terbentuk."
+    },
+    {
+        "name": "logs",
+        "description": "Log aktivitas pengguna."
     },
     {
         "name": "chat",
@@ -549,6 +554,32 @@ async def visualize_graph(request_http: Request, token: str = Depends(verify_bea
         return FileResponse(file_path, media_type="image/png")
     else:
         raise HTTPException(status_code=404, detail="Tidak ditemukan file graph.")
+
+
+# Endpoint untuk mendapatkan data dari log_activity.xlsx sebagai JSON
+@app.get("/logs", tags=["logs"])
+async def log_activity(request_http: Request, token: str = Depends(verify_bearer_token)):
+    file_path = "api/logs/log_activity.xlsx"
+    if os.path.exists(file_path):
+        try:
+            wb = openpyxl.load_workbook(file_path)
+            ws = wb.active
+            rows = list(ws.iter_rows(values_only=True))
+            headers = rows[0]
+            data = [dict(zip(headers, row)) for row in rows[1:]]
+            data = data[::-1]
+            return JSONResponse(
+                content={
+                    "status_code": 200,
+                    "success": True,
+                    "message": "OK",
+                    "data": data
+                }
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Gagal membaca file Excel: {str(e)}")
+    else:
+        raise HTTPException(status_code=404, detail="Tidak ditemukan file log.")
 
 
 # Enpoint untuk chat

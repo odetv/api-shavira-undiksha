@@ -53,7 +53,7 @@ class DeleteDatasetsRequest(BaseModel):
 class ProcessRequest(BaseModel):
     llm: str
     model_llm: str
-    embbeder: str
+    embedder: str
     model_embedder: str
     chunk_size: int
     chunk_overlap: int
@@ -371,29 +371,29 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
     }
     if request.model_llm not in valid_model_llm.get(request.llm, []):
         raise HTTPException(status_code=400, detail=f"Model LLM untuk '{request.llm}' harus salah satu dari {valid_model_llm[request.llm]}.")
-    if not request.embbeder:
-        raise HTTPException(status_code=400, detail="Embbeder harus diisi dengan sesuai.")
+    if not request.embedder:
+        raise HTTPException(status_code=400, detail="Embedder harus diisi dengan sesuai.")
     if not request.model_embedder:
         raise HTTPException(status_code=400, detail="Model Embedder harus diisi dengan sesuai.")
     valid_embedder = ["openai", "ollama"]
-    if request.embbeder not in valid_embedder:
+    if request.embedder not in valid_embedder:
         raise HTTPException(status_code=400, detail="Embedder harus 'openai' atau 'ollama'.")
     valid_embedder_model = {
         "openai": ["text-embedding-3-large", "text-embedding-3-small"],
         "ollama": ["bge-m3", "mxbai-embed-large"]
     }
-    if request.model_embedder not in valid_embedder_model.get(request.embbeder, []):
-        raise HTTPException(status_code=400, detail=f"Model Embedder untuk '{request.embbeder}' harus salah satu dari {valid_embedder_model[request.embbeder]}.")
-    def get_embbeder():
-        if request.embbeder.lower() == "openai":
+    if request.model_embedder not in valid_embedder_model.get(request.embedder, []):
+        raise HTTPException(status_code=400, detail=f"Model Embedder untuk '{request.embedder}' harus salah satu dari {valid_embedder_model[request.embedder]}.")
+    def get_embedder():
+        if request.embedder.lower() == "openai":
             return OpenAIEmbeddings(api_key=openai_api_key, model=request.model_embedder)
-        elif request.embbeder.lower() == "ollama":
+        elif request.embedder.lower() == "ollama":
             return OllamaEmbeddings(base_url=ollama_base_url, model=request.model_embedder)
     if request.chunk_size <= 0:
         raise HTTPException(status_code=400, detail="Chunk Size harus diisi nilai lebih dari 0.")
     if request.chunk_overlap <= 0:
         raise HTTPException(status_code=400, detail="Chunk Overlap harus diisi nilai lebih dari 0.")
-    EMBEDDER = get_embbeder()
+    EMBEDDER = get_embedder()
     if not os.path.exists(DATASETS_DIR):
         os.makedirs(DATASETS_DIR)
     if not os.path.exists(VECTORDB_DIR):
@@ -435,7 +435,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         "timestamp": timestamp,
         "llm": request.llm,
         "model_llm": request.model_llm,
-        "embbeder": request.embbeder,
+        "embedder": request.embedder,
         "model_embedder": request.model_embedder,
         "chunk_size": request.chunk_size,
         "chunk_overlap": request.chunk_overlap,
@@ -447,7 +447,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
-        "description": f"Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.\n###\nllm:{request.llm}\n###\nmodel_llm:{request.model_llm}\n###\nembbeder:{request.embbeder}\n###\nmodel_embedder:{request.model_embedder}\n###\nchunk_size:{request.chunk_size}\n###\nchunk_overlap:{request.chunk_overlap}\n###\ntotal_chunks:{len(chunks)}"
+        "description": f"Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.\n###\nllm:{request.llm}\n###\nmodel_llm:{request.model_llm}\n###\nembedder:{request.embedder}\n###\nmodel_embedder:{request.model_embedder}\n###\nchunk_size:{request.chunk_size}\n###\nchunk_overlap:{request.chunk_overlap}\n###\ntotal_chunks:{len(chunks)}"
     })
     return api_response(
         status_code=200,
@@ -457,7 +457,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
             "timestamp": timestamp,
             "llm": request.llm,
             "model_llm": request.model_llm,
-            "embbeder": request.embbeder,
+            "embedder": request.embedder,
             "model_embedder": request.model_embedder,
             "chunk_size": request.chunk_size,
             "chunk_overlap": request.chunk_overlap,
@@ -483,7 +483,7 @@ async def check_model(request_http: Request, token: str = Depends(verify_bearer_
             "last_update": sheet.cell(row=last_row, column=1).value or "Unknown",
             "llm": sheet.cell(row=last_row, column=2).value or "",
             "model_llm": sheet.cell(row=last_row, column=3).value or "",
-            "embbeder": sheet.cell(row=last_row, column=4).value or "",
+            "embedder": sheet.cell(row=last_row, column=4).value or "",
             "model_embedder": sheet.cell(row=last_row, column=5).value or "",
             "chunk_size": sheet.cell(row=last_row, column=6).value or "",
             "chunk_overlap": sheet.cell(row=last_row, column=7).value or "",

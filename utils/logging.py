@@ -45,7 +45,7 @@ def log_configllm(log):
         log["timestamp"],
         log["llm"],
         log["model_llm"],
-        log["embbeder"],
+        log["embedder"],
         log["model_embedder"],
         log["chunk_size"],
         log["chunk_overlap"],

@@ -189,7 +189,7 @@ async def list_datasets(request_http: Request, token: str = Depends(verify_beare
 
 # Endpoint untuk membaca konten file tertentu (Read)
 @app.get("/datasets/read/{filename}", tags=["datasets"])
-async def read_datasets(request_http: Request, filename: str, token: str = Depends(verify_bearer_token)):
+async def read_datasets(request_http: Request, filename: str):
     timestamp = get_current_time()
     file_path = os.path.join(DATASETS_DIR, filename)
     if not os.path.isfile(file_path):

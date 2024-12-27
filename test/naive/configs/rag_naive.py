@@ -7,7 +7,7 @@ from langchain_community.vectorstores import FAISS
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.llm import chat_llm
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
-from src.config.config import DATASETS_DIR, VECTORDB_DIR
+from src.config.config import VECTORDB_DIR
 
 
 def rag_naive(question):
@@ -29,8 +29,8 @@ def rag_naive(question):
             raise
     
     # Filter Context
-    promptGraderDocsAgent = f"""
-        Anda adalah seorang pemilih konteks handal.
+    promptGraderDocsGeneralAgent = f"""
+        Anda adalah agen pemilih konteks handal.
         - Ambil informasi yang hanya berkaitan dengan pertanyaan.
         - Pastikan informasi yang diambil lengkap sesuai konteks yang diberikan.
         - Jangan mengurangi atau melebihi konteks yang diberikan.
@@ -39,7 +39,7 @@ def rag_naive(question):
         Konteks: {draftContext}
     """
     messages = [
-        SystemMessage(content=promptGraderDocsAgent),
+        SystemMessage(content=promptGraderDocsGeneralAgent),
         HumanMessage(content=question),
     ]
     context = chat_llm(messages)
@@ -48,6 +48,7 @@ def rag_naive(question):
     promptAnswerGeneralAgent = f"""
         Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
         - Anda bertugas untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha.
+        - Awali dengan "Salam Harmoni🙏"
         - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
         - Jika ditanya siapa Anda, identitas Anda sebagai Virtual Assistant Penerimaan Mahasiswa Baru Undiksha.
         - Berikan jawaban yang akurat dan konsisten untuk lebih dari satu pertanyaan yang mirip atau sama hanya berdasarkan konteks yang telah diberikan.

@@ -59,19 +59,13 @@ Masuk ke direktori project
   cd va-shavira-undiksha
 ```
 
-Buat virtual environment
+Buat virtual environment (Opsional, jika menggunakan docker ini tidak perlu)
 
 ```bash
   pip install virtualenv
   python -m venv venv
   venv/Scripts/activate     # windows
   source venv/bin/activate  # macOS atau linux
-```
-
-Install requirements
-
-```bash
-  pip install -r requirements.txt
 ```
 
 Buat dan Lengkapi file environment variabel (.env)
@@ -97,25 +91,27 @@ Buat dan Lengkapi file environment variabel (.env)
   VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
-Jalankan dengan Web Streamlit (Frontpage: `/Home` dan Backpage: `/debug`)
+## Jalankan di Development
+
+- Run API Service (Dokumentasi: `/docs` atau `/openapipmb.json`)
 
 ```bash
-  streamlit run app/Home.py --server.port XXXX
+  pip install -r requirements.txt
+  uvicorn api.api:app
 ```
 
-Atau
-
-Jalankan dengan API (Dokumentasi: `/docs` atau `/openapipmb.json`)
+- Run Web Streamlit (Frontpage: `/Home` dan Backpage: `/debug`)
 
 ```bash
-  uvicorn api.api:app --host 0.0.0.0 --port XXXX --workers X
+  pip install -r requirements.txt
+  streamlit run app/Home.py
 ```
 
-Atau
-
-Jalankan dengan CLI di Terminal
+- Run dengan CLI di Terminal
 
 ```bash
+  pip install -r requirements.txt
+
   # Tambahkan baris kode ini pada baris terakhir file main.py:
   build_graph("Ketik pertanyaan disini")
 
@@ -125,10 +121,28 @@ Jalankan dengan CLI di Terminal
 
 Contoh pertanyaan dapat dilihat disini: [example_question.txt](public/etc/example_question.txt)
 
+## Jalankan di Production
+
+- Deploy dengan Docker (Dokumentasi: `/docs` atau `/openapishavira.json`)
+
+```bash
+  docker compose build
+  docker compose up -d
+```
+
+Atau
+
+- Deploy Manual (Dokumentasi: `/docs` atau `/openapishavira.json`)
+
+```bash
+  pip install -r requirements.txt
+  uvicorn api.api:app --host 0.0.0.0 --port XXXX --workers X
+```
+
 ## Struktur Project
 
 ```
-va-pmb-undiksha                         # Root directory project
+va-shavira-undiksha                     # Root directory project
 ├─ api                                  # API model service
 │  ├─ logs
 │  │  ├─ logs_activity.xlsx
@@ -165,7 +179,7 @@ va-pmb-undiksha                         # Root directory project
 │  ├─ datasets
 │  │  └─ any-datasets.pdf
 │  ├─ graph
-│  │  └─ graph-va-pmb-undiksha.png
+│  │  └─ graph-va-shavira-undiksha.png
 │  └─ vectordb
 │     ├─ index.faiss
 │     └─ index.pkl

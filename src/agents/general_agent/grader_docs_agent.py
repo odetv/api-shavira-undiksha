@@ -16,6 +16,8 @@ def graderDocsAgent(state: AgentState):
         - Jangan mengurangi atau melebihi konteks yang diberikan.
         - Format nya gunakan sesuai format konteks yang dberikan, jangan dirubah.
         - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
+        - Tampilkan flag "**Sumber: [Hilangkan kata .pdf nya dan perbaiki format penulisannya tanpa karakter spesial]**" jika sumbernya ada, tapi "**Sumber: AI**" jika tidak ada sesuai konteks.
+        - Sumber bisa saja lebih dari 1 sesuai dengan konteks nya, pisahkan dengan tanda koma.
         Konteks: {state["generalContext"]}
     """
 

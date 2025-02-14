@@ -22,6 +22,7 @@ def resultWriterAgent(state: AgentState):
             - Jangan menyebut ulang pertanyaan secara eksplisit.
             - Jangan menjawab selain menggunakan informasi pada informasi yang diberikan, sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya.
             - Jangan tawarkan informasi lainnya selain informasi yang diberikan yang didapat saja.
+            - Terakhir tampilkan flag sumber jika ada atau jangan tampilkan jika tidak ada sumber (bold).
             - Hasilkan response dalam format Markdown.
             Berikut adalah informasinya:
             {state["answerAgents"]}

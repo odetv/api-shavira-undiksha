@@ -19,7 +19,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings.ollama import OllamaEmbeddings
-from main import build_graph
+from main import run_model
 from utils.scrapper_rss import scrap_news
 from utils.logging import generate_id, log_activity, log_configllm
 from openpyxl import load_workbook
@@ -589,7 +589,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
     if not request.question:
         raise HTTPException(status_code=400, detail="Pertanyaan tidak boleh kosong.")
     try:
-        _, answers = build_graph(question)
+        _, answers = run_model(question)
         log_activity({
             "id": generate_id(),
             "timestamp": timestamp,

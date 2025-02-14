@@ -22,7 +22,7 @@ from src.agents.account_agent.reset_account_agent import resetAccountAgent
 
 
 @time_check
-def build_graph(question):
+def run_model(question):
     workflow = StateGraph(AgentState)
     initial_state = questionIdentifierAgent({"question": question, "finishedAgents": set()})
     context = initial_state["question_type"]
@@ -116,4 +116,4 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")
+# run_model("Siapa rektor undiksha? Berikan 1 berita saja. Saya lupa password sso email@undiksha.ac.id sudah ada akun google di hp. Cetak ktm 1234567890. Cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31.")

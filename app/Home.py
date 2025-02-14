@@ -3,7 +3,7 @@ import re
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from main import build_graph
+from main import run_model
 
 
 EXAMPLE_QUESTIONS = [
@@ -32,7 +32,7 @@ def setup_page():
 
 def process_response(prompt):
     with st.spinner("Sedang memproses, harap tunggu..."):
-        _, response = build_graph(prompt)
+        _, response = run_model(prompt)
         msg = re.sub(
             r'(https://aka\.undiksha\.ac\.id/api/ktm/generate/\S*)', 
             r'[Preview URL](\1)',
@@ -63,7 +63,7 @@ def add_message(role, content, html_content=None, images=None):
 
 
 def display_example_questions():
-    cols = st.columns(len(EXAMPLE_QUESTIONS), vertical_alignment="center")
+    cols = st.columns(len(EXAMPLE_QUESTIONS))
     for col, prompt in zip(cols, EXAMPLE_QUESTIONS):
         with col:
             if st.button(prompt):

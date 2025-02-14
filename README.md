@@ -113,7 +113,7 @@ Buat dan Lengkapi file environment variabel (.env)
   pip install -r requirements.txt
 
   # Tambahkan baris kode ini pada baris terakhir file main.py:
-  build_graph("Ketik pertanyaan disini")
+  run_model("Ketik pertanyaan disini")
 
   # Jalankan di terminal:
   python main.py

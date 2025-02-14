@@ -1,3 +1,4 @@
+import os
 from utils.debug_time import time_check
 from utils.agent_state import AgentState
 from langchain_community.vectorstores import FAISS
@@ -15,7 +16,14 @@ def generalAgent(state: AgentState):
     try:
         vectordb = FAISS.load_local(VECTOR_PATH, EMBEDDER, allow_dangerous_deserialization=True)
         retriever = vectordb.similarity_search(question, k=5)
-        context = "\n\n".join([doc.page_content for doc in retriever])
+        # Dengan metadata
+        context = "\n\n".join([
+            f"Sumber: {os.path.basename(doc.metadata.get('source', 'Unknown'))}\n{doc.page_content}" 
+            for doc in retriever
+        ])
+        # Tanpa metadata
+        # context = "\n\n".join([doc.page_content for doc in retriever])
+        # print("DEBUG: ", context)
     except RuntimeError as e:
         if "could not open" in str(e):
             raise RuntimeError("Vector database FAISS index file not found. Please ensure the index file exists at the specified path.")

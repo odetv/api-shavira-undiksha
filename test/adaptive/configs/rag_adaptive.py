@@ -1,1 +1,1 @@
-from main import build_graph
+from main import run_model

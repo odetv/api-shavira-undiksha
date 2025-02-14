@@ -4,7 +4,7 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from datetime import datetime
 from configs.sample_case import questions, ground_truths
-from configs.rag_adaptive import build_graph
+from configs.rag_adaptive import run_model
 from datasets import Dataset 
 from ragas import evaluate
 from ragas.metrics import (
@@ -18,7 +18,7 @@ answers = []
 contexts = []
 
 for question in questions:
-    context, answer = build_graph(question)
+    context, answer = run_model(question)
     contexts.append([ctx['answer'] for ctx in context])
     answers.append(answer)
 

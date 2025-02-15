@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 from datetime import datetime
@@ -12,7 +11,7 @@ import openpyxl
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_405_METHOD_NOT_ALLOWED
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel
 from typing_extensions import List
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -20,7 +19,6 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from main import run_model
-from utils.scrapper_rss import scrap_news
 from utils.logging import generate_id, log_activity, log_configllm
 from openpyxl import load_workbook
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
@@ -78,14 +76,6 @@ tags_metadata = [
     {
         "name": "checkmodel",
         "description": "Cek parameter model yang digunakan."
-    },
-    {
-        "name": "news",
-        "description": "Hasil scrapping news."
-    },
-    {
-        "name": "graph",
-        "description": "Gambar alur graph terbentuk."
     },
     {
         "name": "logs",
@@ -507,52 +497,6 @@ async def check_model(request_http: Request, token: str = Depends(verify_bearer_
         raise HTTPException(status_code=e.status_code, detail=f"{e.detail}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{str(e)}")
-
-
-# Endpoint untuk scrapping berita
-@app.get("/news", tags=["news"])
-async def scrapping_news(request_http: Request, token: str = Depends(verify_bearer_token)):
-    timestamp = get_current_time()
-    news_data = scrap_news()
-    news_data_json = json.loads(news_data)
-    try:
-        log_activity({
-            "id": generate_id(),
-            "timestamp": timestamp,
-            "method": f"{request_http.method} {request_http.url.path}",
-            "status_code": 200,
-            "success": True,
-            "description": f"OK.\n###\nNews:{news_data_json}"
-        })
-        return api_response(
-                status_code=200,
-                success=True,
-                message="OK",
-                data=news_data_json
-            )
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=f"{e.detail}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"{str(e)}")
-
-
-# Endpoint untuk menampilkan graph
-@app.get("/graph", tags=["graph"])
-async def visualize_graph(request_http: Request, token: str = Depends(verify_bearer_token)):
-    timestamp = get_current_time()
-    file_path = "src/graph/graph-va-shavira-undiksha.png"
-    if os.path.exists(file_path):
-        log_activity({
-            "id": generate_id(),
-            "timestamp": timestamp,
-            "method": f"{request_http.method} {request_http.url.path}",
-            "status_code": 200,
-            "success": True,
-            "description": f"image/png\n###\nfilename={file_path}"
-        })
-        return FileResponse(file_path, media_type="image/png")
-    else:
-        raise HTTPException(status_code=404, detail="Tidak ditemukan file graph.")
 
 
 # Endpoint untuk mendapatkan data dari logs

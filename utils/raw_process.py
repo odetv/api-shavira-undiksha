@@ -16,6 +16,8 @@ if not os.path.exists(VECTORDB_DIR):
 # 1. Process Load Documents
 loader = PyPDFDirectoryLoader(DATASETS_DIR)
 documents = loader.load()
+for doc in documents:
+    doc.metadata["source"] = os.path.basename(doc.metadata["source"])
 
 
 # 2. Process Chunking

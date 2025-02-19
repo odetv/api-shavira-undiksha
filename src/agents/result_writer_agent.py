@@ -9,7 +9,7 @@ def resultWriterAgent(state: AgentState):
     if len(state["finishedAgents"]) < state["totalAgents"]:
         print("\nMenunggu agent lain menyelesaikan tugas...")
         return None
-    
+
     elif len(state["finishedAgents"]) == state["totalAgents"]:
         info = "\n--- RESULT WRITER ---"
         print(info)
@@ -22,7 +22,7 @@ def resultWriterAgent(state: AgentState):
             - Jangan menyebut ulang pertanyaan secara eksplisit.
             - Jangan menjawab selain menggunakan informasi pada informasi yang diberikan, sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya.
             - Jangan tawarkan informasi lainnya selain informasi yang diberikan yang didapat saja.
-            - Terakhir tampilkan flag sumber jika ada atau jangan tampilkan jika tidak ada sumber (bold).
+            - Terakhir tampilkan flag sumber hanya jika ada.
             - Hasilkan response dalam format Markdown.
             Berikut adalah informasinya:
             {state["answerAgents"]}

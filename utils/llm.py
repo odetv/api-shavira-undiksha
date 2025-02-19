@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 ollama_base_url = os.getenv("OLLAMA_BASE_URL")
 openai_api_key = os.getenv("OPENAI_API_KEY")
-va_llm = os.getenv("VA_LLM_SERVICE")
-va_embedder = os.getenv("VA_EMBEDDER_SERVICE")
+va_llm = "openai"
+va_embedder = "openai"
 
 
 def chat_llm(question: str):

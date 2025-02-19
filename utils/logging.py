@@ -1,54 +1,17 @@
-import os
-import openpyxl
-from openpyxl import Workbook
-import random
-import string
+from src.database.firebase import init_firebase
+from firebase_admin import firestore
 
-def generate_id():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+db = init_firebase()
 
 def log_activity(log):
-    log_dir = "api/logs"
-    os.makedirs(log_dir, exist_ok=True)
-    file_path = os.path.join(log_dir, "log_activity.xlsx")
-    try:
-        wb = openpyxl.load_workbook(file_path)
-        ws = wb.active
-    except FileNotFoundError:
-        wb = Workbook()
-        ws = wb.active
-        ws.append(["ID", "Timestamp", "Method", "Status Code", "Success", "Description"])
-    ws.append([
-        log["id"],
-        log["timestamp"],
-        log["method"],
-        log["status_code"],
-        log["success"],
-        log["description"]
-    ])
-    wb.save(file_path)
-
-
-def log_configllm(log):
-    log_dir = "api/logs"
-    os.makedirs(log_dir, exist_ok=True)
-    file_path = os.path.join(log_dir, "log_configllm.xlsx")
-    try:
-        wb = openpyxl.load_workbook(file_path)
-        ws = wb.active
-    except FileNotFoundError:
-        wb = Workbook()
-        ws = wb.active
-        ws.append(["Timestamp", "LLM", "Model LLM", "Embedder", "Model Embedder", "Chunk Size", "Chunk Overlap", "Total Chunks"])
-    ws.delete_rows(2, ws.max_row)
-    ws.append([
-        log["timestamp"],
-        log["llm"],
-        log["model_llm"],
-        log["embedder"],
-        log["model_embedder"],
-        log["chunk_size"],
-        log["chunk_overlap"],
-        log["total_chunks"]
-    ])
-    wb.save(file_path)
+    log_ref = db.collection("logs").document()
+    log_data = {
+        "id": log_ref.id,
+        "timestamp": firestore.SERVER_TIMESTAMP,
+        "method": log["method"],
+        "status_code": log["status_code"],
+        "success": log["success"],
+        "description": log["description"]
+    }
+    log_ref.set(log_data)

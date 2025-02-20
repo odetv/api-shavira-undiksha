@@ -97,7 +97,7 @@ Buat dan Lengkapi file environment variabel (.env)
 
 ```bash
   pip install -r requirements.txt
-  uvicorn api.api:app
+  uvicorn api.main:app
 ```
 
 - Run Web Streamlit (Frontpage: `/Home` dan Backpage: `/debug`)
@@ -136,7 +136,7 @@ Atau
 
 ```bash
   pip install -r requirements.txt
-  uvicorn api.api:app --host 0.0.0.0 --port XXXX --workers X
+  uvicorn api.main:app --host 0.0.0.0 --port XXXX --workers X
 ```
 
 ## Struktur Project
@@ -144,16 +144,7 @@ Atau
 ```
 va-shavira-undiksha                     # Root directory project
 ├─ api                                  # API model service
-│  ├─ logs
-│  │  ├─ logs_activity.xlsx
-│  │  └─ logs_configllm.xlsx
-│  └─ api.py                            # Base code run API service
-├─ app                                  # Web interface streamlit
-│  ├─ .streamlit
-│  │  └─ config.toml
-│  ├─ pages
-│  │  └─ Debug.py
-│  └─ Home.py                           # Base code run web streamlit
+│  └─ main.py                           # Base code run API service
 ├─ public                               # Public assets file and media
 │  ├─ etc
 │  │  └─ example_question.txt

@@ -1,7 +1,7 @@
 import os
 import firebase_admin
-from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
+from dotenv import load_dotenv
 
 
 load_dotenv()
@@ -21,8 +21,12 @@ def init_firebase():
         "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_CERT_URL"),
         "universe_domain": os.getenv("FIREBASE_UNIVERSE_DOMAIN")
     })
+
     try:
         firebase_admin.get_app()
     except ValueError:
         firebase_admin.initialize_app(cred)
     return firestore.client()
+
+
+db = init_firebase()

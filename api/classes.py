@@ -9,8 +9,8 @@ class DeleteDatasetsRequest(BaseModel):
 class ProcessRequest(BaseModel):
     llm: str
     model_llm: str
-    embedder: str
-    model_embedder: str
+    embedding: str
+    model_embedding: str
     chunk_size: int
     chunk_overlap: int
     class Config:

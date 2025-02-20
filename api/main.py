@@ -189,7 +189,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
         )
 
 
-async def get_models(llm_platform: str):
+async def get_llm(llm_platform: str):
     try:
         if llm_platform == "openai":
             doc_ref = db.collection("settings").document("connection_openai")
@@ -219,26 +219,26 @@ async def get_models(llm_platform: str):
         raise HTTPException(status_code=500, detail=f"{str(e)}")
 
 
-def get_embedder(embedder_platform: str, embedder_model: str):
+def get_embedding(embedding_platform: str, embedding_model: str):
     try:
-        if embedder_platform.lower() == "openai":
+        if embedding_platform.lower() == "openai":
             doc_ref = db.collection("settings").document("connection_openai")
-        elif embedder_platform.lower() == "ollama":
+        elif embedding_platform.lower() == "ollama":
             doc_ref = db.collection("settings").document("connection_ollama")
         else:
-            raise HTTPException(status_code=400, detail=f"Embedding platform {embedder_platform} invalid.")
+            raise HTTPException(status_code=400, detail=f"Embedding platform {embedding_platform} invalid.")
         
         doc = doc_ref.get()
         if not doc.exists:
-            raise HTTPException(status_code=500, detail=f"Configuration informations {embedder_platform} not found in Firestore.")
+            raise HTTPException(status_code=500, detail=f"Configuration informations {embedding_platform} not found in Firestore.")
 
         api_baseurl = doc.to_dict().get("api_baseurl")
         api_key = doc.to_dict().get("api_key")
 
-        if embedder_platform.lower() == "openai":
-            return OpenAIEmbeddings(base_url=f"{api_baseurl}/v1", api_key=api_key, model=embedder_model)
-        elif embedder_platform.lower() == "ollama":
-            return OllamaEmbeddings(base_url=api_baseurl, model=embedder_model)
+        if embedding_platform.lower() == "openai":
+            return OpenAIEmbeddings(base_url=f"{api_baseurl}/v1", api_key=api_key, model=embedding_model)
+        elif embedding_platform.lower() == "ollama":
+            return OllamaEmbeddings(base_url=api_baseurl, model=embedding_model)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{str(e)}")
@@ -246,22 +246,22 @@ def get_embedder(embedder_platform: str, embedder_model: str):
 
 @app.post("/setup/config", tags=["config"])
 async def setup_config(request_http: Request, request: ProcessRequest, token: str = Depends(verify_bearer_token)):
-    valid_models_llm = await get_models(request.llm)
-    valid_models_embedder = await get_models(request.embedder)
-    EMBEDDER = get_embedder(request.embedder, request.model_embedder)
+    valid_models_llm = await get_llm(request.llm)
+    valid_models_embedding = await get_llm(request.embedding)
+    EMBEDDING = get_embedding(request.embedding, request.model_embedding)
 
     if request.model_llm not in valid_models_llm:
         raise HTTPException(status_code=400, detail=f"LLM model {request.model_llm} does not exist on platform {request.llm}")
-    if request.model_embedder not in valid_models_embedder:
-        raise HTTPException(status_code=400, detail=f"Embedding model {request.model_embedder} does not exist on platform {request.embedder}")
+    if request.model_embedding not in valid_models_embedding:
+        raise HTTPException(status_code=400, detail=f"Embedding model {request.model_embedding} does not exist on platform {request.embedding}")
     
     if not request.llm or request.llm not in ["openai", "ollama"]:
         raise HTTPException(status_code=400, detail="LLM platform must be 'openai' or 'ollama'.")
     if not request.model_llm:
         raise HTTPException(status_code=400, detail="LLM model cannot be empty.")
-    if not request.embedder or request.embedder not in ["openai", "ollama"]:
+    if not request.embedding or request.embedding not in ["openai", "ollama"]:
         raise HTTPException(status_code=400, detail="Embedding platform must be 'openai' or 'ollama'.")
-    if not request.model_embedder:
+    if not request.model_embedding:
         raise HTTPException(status_code=400, detail="Embedding model cannot be empty.")
     
     if request.chunk_size is None or request.chunk_size <= 0:
@@ -290,7 +290,7 @@ async def setup_config(request_http: Request, request: ProcessRequest, token: st
         raise HTTPException(status_code=500, detail=f"{str(e)}")
 
     try:
-        vectordb = FAISS.from_documents(chunks, EMBEDDER)
+        vectordb = FAISS.from_documents(chunks, EMBEDDING)
         vectordb.save_local(VECTORDB_DIR)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{str(e)}")
@@ -299,8 +299,8 @@ async def setup_config(request_http: Request, request: ProcessRequest, token: st
     settings_ref.set({
         "llm_platform": request.llm,
         "llm_model": request.model_llm,
-        "embedding_platform": request.embedder,
-        "embedding_model": request.model_embedder,
+        "embedding_platform": request.embedding,
+        "embedding_model": request.model_embedding,
         "chunk_size": request.chunk_size,
         "chunk_overlap": request.chunk_overlap,
         "total_chunks": len(chunks),
@@ -315,8 +315,8 @@ async def setup_config(request_http: Request, request: ProcessRequest, token: st
         data={
             "llm_platform": request.llm,
             "llm_model": request.model_llm,
-            "embedding_platform": request.embedder,
-            "embedding_model": request.model_embedder,
+            "embedding_platform": request.embedding,
+            "embedding_model": request.model_embedding,
             "chunk_size": request.chunk_size,
             "chunk_overlap": request.chunk_overlap,
             "total_chunks": len(chunks)
@@ -488,7 +488,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
             request_http,
             status_code=500,
             success=False,
-            message=f"An unexpected error occurred. Try re-embedding, and please try again. If this problem persists, there may be an issue with the LLM or Embedder Service. {str(e)}",
+            message=f"An unexpected error occurred. Try re-embedding, and please try again. If this problem persists, there may be an issue with the LLM or Embedding Service. {str(e)}",
             data=None
         )
 

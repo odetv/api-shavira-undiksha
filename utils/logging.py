@@ -1,8 +1,6 @@
-from src.database.firebase import init_firebase
+from src.database.firebase import db
 from firebase_admin import firestore
 
-
-db = init_firebase()
 
 def log_activity(log):
     log_ref = db.collection("logs").document()

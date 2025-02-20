@@ -85,10 +85,18 @@ Buat dan Lengkapi file environment variabel (.env)
   API_KELULUSAN_UNDIKSHA_USERNAME="USERNAME_API_KELULUSAN_UNDIKSHA"
   API_KELULUSAN_UNDIKSHA_PASSWORD="PASSWORD_API_KELULUSAN_UNDIKSHA"
   API_KELULUSAN_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KELULUSAN_UNDIKSHA"
-  STREAMLIT_KEY_ADMIN="ADMIN_KEY_TO_ACCESS_DEBUG_STREAMLIT"
-  VA_BEARER_TOKEN="TOKEN_FOR_BUILD_API_VIRTUAL_ASSISTANT"
-  VA_LLM_SERVICE="OPENAI_OR_OLLAMA"
-  VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
+  API_SHAVIRA_BEARER_TOKEN="TOKEN_FOR_BUILD_API_VIRTUAL_ASSISTANT"
+  FIREBASE_TYPE="YOUR_FIREBASE_TYPE"
+  FIREBASE_PROJECT_ID="YOUR_FIREBASE_PROJECT_ID"
+  FIREBASE_PRIVATE_KEY_ID=YOUR_FIREBASE_PRIVATE_KEY_ID
+  FIREBASE_PRIVATE_KEY="YOUR_FIREBASE_PRIVATE_KEY"
+  FIREBASE_CLIENT_EMAIL="YOUR_FIREBASE_CLIENT_EMAIL"
+  FIREBASE_CLIENT_ID="YOUR_FIREBASE_CLIENT_ID"
+  FIREBASE_AUTH_URI="YOUR_FIREBASE_AUTH_URI"
+  FIREBASE_TOKEN_URI="YOUR_FIREBASE_TOKEN_URI"
+  FIREBASE_AUTH_PROVIDER_CERT_URL="YOUR_FIREBASE_AUTH_PROVIDER_CERT_URL"
+  FIREBASE_CLIENT_CERT_URL="YOUR_FIREBASE_CLIENT_CERT_URL"
+  FIREBASE_UNIVERSE_DOMAIN="YOUR_FIREBASE_UNIVERSE_DOMAIN"
 ```
 
 ## Jalankan di Development
@@ -98,13 +106,6 @@ Buat dan Lengkapi file environment variabel (.env)
 ```bash
   pip install -r requirements.txt
   uvicorn api.main:app
-```
-
-- Run Web Streamlit (Frontpage: `/Home` dan Backpage: `/debug`)
-
-```bash
-  pip install -r requirements.txt
-  streamlit run app/Home.py
 ```
 
 - Run dengan CLI di Terminal
@@ -174,20 +175,6 @@ va-shavira-undiksha                     # Root directory project
 │  └─ vectordb
 │     ├─ index.faiss
 │     └─ index.pkl
-├─ test                                 # Unit test evaluation RAGAS
-│  ├─ config
-│  │  ├─ list_qa.xlsx
-│  │  ├─ rag_adaptive.py
-│  │  ├─ rag_naive.py
-│  │  └─ sample_case.py
-│  ├─ scores_ragas
-│  │  ├─ final
-│  │  │  ├─ score_test_adaptive.xlsx
-│  │  │  └─ score_test_naive.xlsx
-│  │  ├─ score_test_adaptive.xlsx
-│  │  └─ score_test_naive.xlsx
-│  ├─ test_adaptive.py
-│  └─ test_naive.py
 ├─ utils                                # Tools reusable
 │  ├─ agent_state.py
 │  ├─ api_undiksha.py

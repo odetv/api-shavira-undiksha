@@ -244,7 +244,7 @@ def get_embedder(embedder_platform: str, embedder_model: str):
         raise HTTPException(status_code=500, detail=f"{str(e)}")
 
 
-@app.post("/setup-config", tags=["config"])
+@app.post("/setup/config", tags=["config"])
 async def setup_config(request_http: Request, request: ProcessRequest, token: str = Depends(verify_bearer_token)):
     valid_models_llm = await get_models(request.llm)
     valid_models_embedder = await get_models(request.embedder)
@@ -324,7 +324,7 @@ async def setup_config(request_http: Request, request: ProcessRequest, token: st
     )
 
 
-@app.get("/check-config", tags=["config"])
+@app.get("/check/config", tags=["config"])
 async def check_config(request_http: Request, token: str = Depends(verify_bearer_token)):
     try:
         settings_ref = db.collection("settings").document("models")
@@ -360,6 +360,72 @@ async def check_config(request_http: Request, token: str = Depends(verify_bearer
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get configuration informations from Firestore. {str(e)}")
+
+
+@app.get("/check/openai-models", tags=["config"])
+async def check_openai_models(request_http: Request, token: str = Depends(verify_bearer_token)):
+    try:
+        doc_ref = db.collection("settings").document("connection_openai")
+        doc = doc_ref.get()
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="OpenAI configuration is not found in Firestore.")
+
+        data = doc.to_dict()
+        api_baseurl = data.get("api_baseurl")
+        api_key = data.get("api_key")
+
+        if not api_baseurl or not api_key:
+            raise HTTPException(status_code=400, detail="API Base URL or API Key OpenAI was not found.")
+
+        response = requests.get(f"{api_baseurl}/v1/models", headers={"Authorization": f"Bearer {api_key}"})
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+
+        models = response.json().get("data", [])
+
+        return api_response(
+            request_http,
+            status_code=200,
+            success=True,
+            message="Successfully get the list of OpenAI models.",
+            data=[model["id"] for model in models]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/check/ollama-models", tags=["config"])
+async def check_openai_models(request_http: Request, token: str = Depends(verify_bearer_token)):
+    try:
+        doc_ref = db.collection("settings").document("connection_ollama")
+        doc = doc_ref.get()
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Ollama configuration is not found in Firestore.")
+
+        data = doc.to_dict()
+        api_baseurl = data.get("api_baseurl")
+
+        if not api_baseurl:
+            raise HTTPException(status_code=400, detail="API Base URL Ollama was not found.")
+
+        response = requests.get(f"{api_baseurl}/v1/models")
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+
+        models = response.json().get("data", [])
+
+        return api_response(
+            request_http,
+            status_code=200,
+            success=True,
+            message="Successfully get the list of Ollama models.",
+            data=[model["id"] for model in models]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 

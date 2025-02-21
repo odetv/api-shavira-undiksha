@@ -19,7 +19,7 @@ from firebase_admin import firestore
 from main import run_model
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 from api.initialize import app
-from api.classes import QuestionRequest, DeleteDatasetsRequest, ProcessRequest
+from api.classes import QuestionRequest, DeleteDatasetsRequest, SetupConfigRequest, SetupQuickConfigRequest
 from api.authentication import verify_bearer_token
 from api.handler import (
     api_response,
@@ -35,15 +35,17 @@ from src.database.firebase import db
 @app.get("/", tags=["root"])
 async def root(request_http: Request, token: str = Depends(verify_bearer_token)):
     timestamp = datetime.now(ZoneInfo("Asia/Makassar")).strftime("%Y-%m-%d %H:%M:%S")
-    return JSONResponse(content={
-        "statusCode": 200,
-        "success": True,
-        "message": "OK",
-        "data": {
-            "timestamp": timestamp,
-            "description": "API Virtual Assistant Undiksha"
-        }
-    })
+    return JSONResponse(
+        status_code=200,
+        content={
+            "statusCode": 200,
+            "success": True,
+            "message": "OK",
+            "data": {
+                "timestamp": timestamp,
+                "description": "API Virtual Assistant Undiksha"
+            }
+        })
 
 
 # Endpoint untuk melihat daftar file (List)
@@ -245,7 +247,7 @@ def get_embedding(embedding_platform: str, embedding_model: str):
 
 
 @app.post("/setup/config", tags=["config"])
-async def setup_config(request_http: Request, request: ProcessRequest, token: str = Depends(verify_bearer_token)):
+async def setup_config(request_http: Request, request: SetupConfigRequest, token: str = Depends(verify_bearer_token)):
     valid_models_llm = await get_llm(request.llm)
     valid_models_embedding = await get_llm(request.embedding)
     EMBEDDING = get_embedding(request.embedding, request.model_embedding)
@@ -320,6 +322,41 @@ async def setup_config(request_http: Request, request: ProcessRequest, token: st
             "chunk_size": request.chunk_size,
             "chunk_overlap": request.chunk_overlap,
             "total_chunks": len(chunks)
+        }
+    )
+
+@app.post("/setup/quick-config", tags=["config"])
+async def setup_quick_config(request_http: Request, request: SetupQuickConfigRequest, token: str = Depends(verify_bearer_token)):
+    valid_models_llm = await get_llm(request.llm)
+
+    if request.model_llm not in valid_models_llm:
+        raise HTTPException(status_code=400, detail=f"LLM model {request.model_llm} does not exist on platform {request.llm}")
+    
+    if not request.llm or request.llm not in ["openai", "ollama"]:
+        raise HTTPException(status_code=400, detail="LLM platform must be 'openai' or 'ollama'.")
+    if not request.model_llm:
+        raise HTTPException(status_code=400, detail="LLM model cannot be empty.")
+
+    settings_ref = db.collection("settings").document("models")
+    settings_ref.set({
+        "llm_platform": request.llm,
+        "llm_model": request.model_llm,
+        "embedding_platform": settings_ref.get().to_dict().get("embedding_platform", ""),
+        "embedding_model": settings_ref.get().to_dict().get("embedding_model", ""),
+        "chunk_size": settings_ref.get().to_dict().get("chunk_size", 0),
+        "chunk_overlap": settings_ref.get().to_dict().get("chunk_overlap", 0),
+        "total_chunks": settings_ref.get().to_dict().get("total_chunks", 0),
+        "updated_at": firestore.SERVER_TIMESTAMP
+    })
+
+    return api_response(
+        request_http,
+        status_code=200,
+        success=True,
+        message="Successfully process of LLM models.",
+        data={
+            "llm_platform": request.llm,
+            "llm_model": request.model_llm
         }
     )
 
@@ -446,12 +483,14 @@ async def logs(token: str = Depends(verify_bearer_token)):
                     log_data["timestamp"] = utc_plus_8.strftime("%Y-%m-%d %H:%M:%S")
                 data.append(log_data)
 
-        return JSONResponse(content={
-            "statusCode": 200,
-            "success": True,
-            "message": "OK",
-            "data": data
-        })
+        return JSONResponse(
+            status_code=200,
+            content={
+                "statusCode": 200,
+                "success": True,
+                "message": "OK",
+                "data": data
+            })
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get logs from Firestore {str(e)}")

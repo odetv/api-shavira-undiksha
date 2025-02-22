@@ -11,7 +11,7 @@ def api_response(request_http: Request, status_code: int, success: bool, message
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": status_code,
         "success": success,
-        "description": f"{message} {data}"
+        "description": f"{message}"
     })
     return JSONResponse(
         status_code=status_code,

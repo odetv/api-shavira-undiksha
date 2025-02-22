@@ -1,3 +1,4 @@
+import re
 from langchain_ollama import OllamaLLM
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -17,6 +18,13 @@ def get_settings_firestore(doc_name: str):
         raise ValueError(str(e))
 
 
+def clean_response_think(text):
+    if not text:
+        return text
+    cleaned_text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    return cleaned_text.strip()
+
+
 def chat_llm(question: str):
     settings = get_settings_firestore("models")
     va_llm = settings.get("llm_platform")
@@ -31,7 +39,9 @@ def chat_llm(question: str):
         
         ollama = OllamaLLM(base_url=ollama_base_url, model=va_model_llm, verbose=True)
         result = ollama.invoke(question)
-        return result
+
+        cleaned_tag_think = clean_response_think(result)
+        return cleaned_tag_think.strip()
     
     elif va_llm == "openai":
         openai_config = get_settings_firestore("connection_openai")
@@ -55,7 +65,9 @@ def chat_llm(question: str):
                 raise ValueError("Incorrect API key provided. Please check your OpenAI API key.")
             else:
                 raise e
-        return result
+    
+        cleaned_tag_think = clean_response_think(result)
+        return cleaned_tag_think.strip()
 
     else:
         raise ValueError("LLM platform must be 'openai' or 'ollama'.")

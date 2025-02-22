@@ -16,8 +16,13 @@ def graderDocsAgent(state: AgentState):
         - Jangan mengurangi atau melebihi konteks yang diberikan.
         - Format nya gunakan sesuai format konteks yang dberikan, jangan dirubah.
         - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
-        - Tampilkan flag "**Sumber: [Hilangkan kata .pdf nya dan perbaiki format penulisannya tanpa karakter spesial]**" jika sumbernya ada, tapi "**Sumber: AI**" jika tidak ada sesuai konteks.
-        - Jumlah sumber bisa lebih dari 1 sesuai dengan konteks nya, jangan sampai terlewatkan, pisahkan dengan tanda koma.
+        - Tambahkan flag sumber pada kalimat terakhir, berikut contoh penulisan sumber yang benar:
+            - Jumlah sumber bisa lebih dari 1 sesuai dengan konteks nya, jangan sampai terlewatkan, pisahkan dengan tanda koma.
+            - Hilangkan akhiran .pdf nya dan perbaiki format penulsiannya hilangkan karakter spesial misalnya underscore atau strip dll.
+            - Jika tidak ada sumber yang disebutkan maka jangan buat flag sumber.
+            Contoh:
+            - Sumber: penelitian_ai.pdf, artikel_ai.txt, maka output yang benar adalah:
+            - Sumber: Penelitian AI, Artikel AI
         Konteks: {state["generalContext"]}
     """
 

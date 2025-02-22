@@ -34,14 +34,14 @@ def get_auth_token_sso():
     try:
         response = requests.post(API_SSO_UNDIKSHA_AUTH_URL, data=body)
         response.raise_for_status()
-        # print("Respon autentikasi:", response.text)
+        # print(response.text)
         result = response.json()
         if result["token"] == result["token"]:
             return result["token"]
         else:
-            raise Exception(f"Autentikasi gagal: {result['message']}")
+            raise Exception(f"Authentication failed. {result['message']}")
     except requests.exceptions.RequestException as e:
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
+        raise SystemExit(f"An error occurred while accessing the authentication API. {e}")
 
 
 def get_auth_token_ktm():
@@ -52,14 +52,14 @@ def get_auth_token_ktm():
     try:
         response = requests.post(API_KTM_UNDIKSHA_AUTH_URL, data=body)
         response.raise_for_status()
-        # print("Respon autentikasi:", response.text)
+        # print(response.text)
         result = response.json()
         if result["status"] == "success":
             return result["data"]
         else:
-            raise Exception(f"Autentikasi gagal: {result['message']}")
+            raise Exception(f"Authentication failed. {result['message']}")
     except requests.exceptions.RequestException as e:
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
+        raise SystemExit(f"An error occurred while accessing the authentication API. {e}")
 
 
 def get_auth_token_kelulusan():
@@ -70,14 +70,14 @@ def get_auth_token_kelulusan():
     try:
         response = requests.post(API_KELULUSAN_UNDIKSHA_AUTH_URL, data=body)
         response.raise_for_status()
-        # print("Respon autentikasi:", response.text)
+        # print(response.text)
         result = response.json()
         if result["token"] == result["token"]:
             return result["token"]
         else:
-            raise Exception(f"Autentikasi gagal: {result['message']}")
+            raise Exception(f"Authentication failed. {result['message']}")
     except requests.exceptions.RequestException as e:
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
+        raise SystemExit(f"An error occurred while accessing the authentication API. {e}")
 
 
 def show_reset_sso(state: AgentState):
@@ -101,13 +101,12 @@ def show_reset_sso(state: AgentState):
                 "is_email_sent": result["data"]["is_email_sent"]
             }
         else:
-            # raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
-            return f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}"
+            # raise Exception(f"Data not found. {result.get('message', 'No error message.')}")
+            return f"Data not found. {result.get('message', 'No error message.')}"
     except requests.exceptions.RequestException as e:
         # if e.response is not None:
-        # print("Detail kesalahan:", e.response.text)
-        # raise SystemExit(f"Terjadi kesalahan saat mengakses API SSO: {e}")
-        return f"Detail kesalahan: {e.response.text}"
+        # raise SystemExit(f"An error occurred while accessing the SSO API. {e}")
+        return f"Error details: {e.response.text}"
 
 
 def show_ktm_mhs(state: AgentState):
@@ -125,9 +124,8 @@ def show_ktm_mhs(state: AgentState):
         return url_ktm_mhs
     except requests.exceptions.RequestException as e:
         # if e.response is not None:
-        # print("Detail kesalahan:", e.response.text)
-        # raise SystemExit(f"Terjadi kesalahan saat mengakses API KTM: {e}")
-        return f"Detail kesalahan: {e.response.text}"
+        # raise SystemExit(f"An error occurred while accessing the KTM API: {e}")
+        return f"Error details: {e.response.text}"
 
 
 def show_kelulusan_pmb(state: AgentState):
@@ -160,13 +158,12 @@ def show_kelulusan_pmb(state: AgentState):
             }
             return informasi_kelulusan
         else:
-            # raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
-            return f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}"
+            # raise Exception(f"Data not found. {result.get('message', 'No error message.')}")
+            return f"Data not found. {result.get('message', 'No error message.')}"
     except requests.exceptions.RequestException as e:
         # if e.response is not None:
-        # print("Detail kesalahan:", e.response.text)
-        # raise SystemExit(f"Terjadi kesalahan saat mengakses API Kelulusan: {e}")
-        return f"Detail kesalahan: {e.response.text}"
+        # raise SystemExit(f"An error occurred while accessing the Kelulusan API: {e}")
+        return f"Error details: {e.response.text}"
 
 
 

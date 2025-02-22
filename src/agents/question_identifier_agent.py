@@ -18,7 +18,7 @@ def questionIdentifierAgent(state: AgentState):
 
     prompt = """
         Anda adalah seoarang pemecah pertanyaan pengguna.
-        Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
+        Tugas Anda sangat penting. Klasifikasikan atau parsing semua pertanyaan yang masuk dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 5 konteks diajukan:
         - GENERAL_AGENT - Berkaitan dengan segala informasi umum mahasiswa, dosen, pegawai, civitas akademika universitas dll dan jika ada yang bertanya tentang dirimu atau sapaan.

@@ -25,6 +25,13 @@ def clean_response_think(text):
     return cleaned_text.strip()
 
 
+# def clean_response_think(text):
+#     if text is None:
+#         return ""
+#     cleaned_text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+#     return cleaned_text.strip()
+
+
 def chat_llm(question: str):
     settings = get_settings_firestore("models")
     va_llm = settings.get("llm_platform")
